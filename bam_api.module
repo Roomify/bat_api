@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * API access to booking data
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function bam_api_menu() {
+  $items['bam/%/%'] = array(
+    'title' => 'BAM Router',
+    'page arguments' => array(1, 2),
+    'page callback' => 'bam_api_router',
+    'access callback' => 'bam_api_access',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Controls access to API functions
+ *
+ * @todo Will be based on API key set in header
+ * @return bool
+ */
+function bam_api_access(){
+  return TRUE;
+}
+
+/**
+ * Routes a request to the appropriate function
+ *
+ * @param string $version
+ * @param string $method
+ */
+function bam_api_router($version = 'v1', $method = 'hello') {
+
+  $supported = bam_api_validate_version($version);
+
+  if (!$supported) {
+    echo 'API Not supported';
+  }
+
+  return 'hi';
+
+  //print ($version);
+  //print ($method);
+  //print 'bam_router';
+}
+
+/**
+ * Checks that the version requested is supported.
+ *
+ * @param $version
+ * @return bool
+ */
+function bam_api_validate_version($version) {
+  $supported = FALSE;
+
+  switch ($version){
+    case 'v1':
+      $supported = TRUE;
+      break;
+    case 'v2':
+      $supported = FALSE;
+      break;
+      default:
+      $supported = FALSE;
+  }
+
+  return $supported;
+}
