@@ -2,15 +2,15 @@
 
 
 $plugin = array(
-  'label' => t('Commerce Price'),
+  'label' => t('Base Price'),
   'handler' => array(
-    'class' => 'RoomsUnitFieldHandlerCommercePrice',
+    'class' => 'RoomsUnitFieldHandlerBasePrice',
   ),
 );
 
-class RoomsUnitFieldHandlerCommercePrice extends RoomsUnitFieldHandlerBase {
+class RoomsUnitFieldHandlerBasePrice extends RoomsUnitFieldHandlerBase {
   public function getFieldType() {
-    return 'commerce_price';
+    return 'base_price';
   }
 
   public function getFieldInfo() {
@@ -29,7 +29,7 @@ class RoomsUnitFieldHandlerCommercePrice extends RoomsUnitFieldHandlerBase {
       if ($field_info['type'] == 'commerce_price') {
         $field_array = $this->unit->{$field['field_name']};
 
-        if ($field['field_name'] != $base_price_field) {
+        if ($field['field_name'] == $base_price_field) {
           if (isset($field_array[LANGUAGE_NONE][0]['amount'])) {
             $price_fields[$field['field_name']] = array(
               'amount' => $field_array[LANGUAGE_NONE][0]['amount'],

@@ -326,14 +326,6 @@ function bam_api_services_resources() {
         'help'     => t('Add a new Rooms Unit.'),
         'args'     => array(
           array(
-            'name'         => 'name',
-            'type'         => 'string',
-            'description'  => t('Name'),
-            'source'       => array('data' => 'name'),
-            'optional'     => TRUE,
-            'default value' => '',
-          ),
-          array(
             'name'         => 'type',
             'type'         => 'string',
             'description'  => t('Type'),
@@ -370,7 +362,7 @@ function bam_api_services_resources() {
 }
 
 /**
- * Retrive a list of units.
+ * Retrieve a list of units.
  *
  * @param $unit_ids
  */
@@ -411,7 +403,11 @@ function bam_api_services_units_index($unit_ids, $offset, $limit) {
       $object_handler = new $class(rooms_unit_load($unit->unit_id));
 
       $field_type = $object_handler->getFieldType();
-      $units[$unit->unit_id]['fields'][$field_type] = $object_handler->getFieldInfo();
+      $field_info = $object_handler->getFieldInfo();
+
+      if (!empty($field_info)) {
+        $units[$unit->unit_id]['fields'][$field_type] = $field_info;
+      }
     }
   }
 
@@ -667,14 +663,13 @@ function bam_api_services_booking_index($unit_ids, $start_date, $duration) {
  * @param $start_date
  * @param $end_date
  */
-function bam_api_services_add_booking($name, $type, $start_date, $end_date, $unit_id) {
+function bam_api_services_add_booking($type, $start_date, $end_date, $unit_id) {
   $return = new stdClass();
   $return->sessid = session_id();
 
   if (rooms_booking_type_load($type) !== FALSE) {
     $booking = rooms_booking_create(
       array(
-        'name' => $name,
         'type' => $type,
         'start_date' => $start_date,
         'end_date' => $end_date,
