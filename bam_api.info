@@ -1,6 +1,12 @@
 name = Booking and Availability Management API
 description = Provides API access to Rooms for Drupal 7 and BAM for Drupal 8
 core = 7.x
-php = 5.5.0
+php = 5.3.9
 
 package = BAM
+
+dependencies[] = rooms_availability
+dependencies[] = rest_server
+dependencies[] = services
+
+files[] = includes/bam_api.rooms_unit_field_handler.inc
