@@ -22,10 +22,16 @@ class RoomsUnitFieldHandlerCommercePrice extends RoomsUnitFieldHandlerBase {
 
       if ($field_info['type'] == 'commerce_price') {
         $field_array = $this->unit->{$field['field_name']};
-        $price_fields[$field['field_name']] = array(
-          'amount' => $field_array[LANGUAGE_NONE][0]['amount'],
-          'currency_code' => $field_array[LANGUAGE_NONE][0]['currency_code'],
-        );
+
+        if (isset($field_array[LANGUAGE_NONE][0]['amount'])) {
+          $price_fields[$field['field_name']] = array(
+            'amount' => $field_array[LANGUAGE_NONE][0]['amount'],
+            'currency_code' => $field_array[LANGUAGE_NONE][0]['currency_code'],
+          );
+        }
+        else {
+          $price_fields[$field['field_name']] = array();
+        }
       }
     }
 

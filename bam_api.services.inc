@@ -83,6 +83,21 @@ function bam_api_default_services_endpoint() {
         ),
       ),
     ),
+    'user' => array(
+      'actions' => array(
+        'login' => array(
+          'enabled' => '1',
+        ),
+        'logout' => array(
+          'enabled' => '1',
+          'settings' => array(
+            'services' => array(
+              'resource_api_version' => '1.0',
+            ),
+          ),
+        ),
+      ),
+    ),
   );
   $endpoint->debug = 0;
   $export['bam_api'] = $endpoint;

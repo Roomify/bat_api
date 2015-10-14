@@ -94,6 +94,22 @@ function bam_api_services_resources() {
             'description'  => t('IDs'),
             'source'       => array('param' => 'ids'),
           ),
+          array(
+            'name'         => 'offset',
+            'type'         => 'string',
+            'optional'     => TRUE,
+            'default value' => 0,
+            'description'  => t('Result offset to start listing'),
+            'source'       => array('param' => 'offset'),
+          ),
+          array(
+            'name'         => 'limit',
+            'type'         => 'string',
+            'optional'     => TRUE,
+            'default value' => 100,
+            'description'  => t('Number of items to return'),
+            'source'       => array('param' => 'limit'),
+          ),
         ),
       ),
       'update' => array(
@@ -107,7 +123,6 @@ function bam_api_services_resources() {
             'description'  => t('Unit ID'),
             'source'       => array('path' => 0),
             'optional'     => FALSE,
-            'default value' => '',
           ),
           array(
             'name' => 'rooms_unit',
@@ -206,7 +221,6 @@ function bam_api_services_resources() {
             'description'  => t('Unit ID'),
             'source'       => array('path' => 0),
             'optional'     => FALSE,
-            'default value' => '',
           ),
           array(
             'name' => 'availability_info',
@@ -261,7 +275,6 @@ function bam_api_services_resources() {
             'description'  => t('Unit ID'),
             'source'       => array('path' => 0),
             'optional'     => FALSE,
-            'default value' => '',
           ),
           array(
             'name' => 'pricing_info',
@@ -317,7 +330,8 @@ function bam_api_services_resources() {
             'type'         => 'string',
             'description'  => t('Name'),
             'source'       => array('data' => 'name'),
-            'optional'     => FALSE,
+            'optional'     => TRUE,
+            'default value' => '',
           ),
           array(
             'name'         => 'type',
@@ -329,15 +343,22 @@ function bam_api_services_resources() {
           array(
             'name'         => 'start_date',
             'type'         => 'string',
-            'description'  => t('Default availability'),
+            'description'  => t('Start date'),
             'source'       => array('data' => 'start_date'),
             'optional'     => FALSE,
           ),
           array(
             'name'         => 'end_date',
             'type'         => 'string',
-            'description'  => t('Bookable'),
+            'description'  => t('End date'),
             'source'       => array('data' => 'end_date'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'unit_id',
+            'type'         => 'string',
+            'description'  => t('Unit ID'),
+            'source'       => array('data' => 'unit_id'),
             'optional'     => FALSE,
           ),
         ),
@@ -349,22 +370,26 @@ function bam_api_services_resources() {
 }
 
 /**
+ * Retrive a list of units.
  *
+ * @param $unit_ids
  */
-function bam_api_services_units_index($unit_ids) {
+function bam_api_services_units_index($unit_ids, $offset, $limit) {
   $return = new stdClass();
   $return->sessid = session_id();
 
   ctools_include('plugins');
   $field_handlers = ctools_get_plugins('bam_api', 'rooms_unit_field_handler');
 
-  $ids = explode(',', $unit_ids);
+  $ids = array_filter(explode(',', $unit_ids));
 
   $query = db_select('rooms_units', 'n')
             ->fields('n', array('unit_id', 'type', 'name', 'default_state', 'bookable', 'status'));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
+  $query->orderBy('unit_id');
+  $query->range($offset, $limit);
   $rooms_units = $query->execute()->fetchAll();
 
   $units = array();
@@ -396,30 +421,49 @@ function bam_api_services_units_index($unit_ids) {
 }
 
 /**
+ * Create a new unit.
  *
+ * @param $name
+ * @param $type
+ * @param $default_state
+ * @param $bookable
+ * @param $status
  */
 function bam_api_services_add_unit($name, $type, $default_state, $bookable, $status) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $unit = rooms_unit_create(
-    array(
-      'name' => $name,
-      'type' => $type,
-      'default_state' => $default_state,
-      'bookable' => $bookable,
-      'status' => $status,
-      'uid' => 0,
-    )
-  );
+  if (rooms_unit_type_load($type) !== FALSE && $name != '') {
+    $unit = rooms_unit_create(
+      array(
+        'name' => $name,
+        'type' => $type,
+        'default_state' => $default_state,
+        'bookable' => $bookable,
+        'status' => $status,
+        'uid' => 0,
+        'created' => REQUEST_TIME,
+        'changed' => REQUEST_TIME,
+      )
+    );
 
-  $return->unit_id = $unit->unit_id;
+    rooms_unit_save($unit);
+
+    $return->unit_id = $unit->unit_id;
+    $return->status = 1;
+  }
+  else {
+    $return->status = 0;
+  }
 
   return $return;
 }
 
 /**
+ * Update an existing unit.
  *
+ * @param $unit_id
+ * @param $rooms_unit_data
  */
 function bam_api_services_edit_unit($unit_id, $rooms_unit_data) {
   $return = new stdClass();
@@ -427,13 +471,32 @@ function bam_api_services_edit_unit($unit_id, $rooms_unit_data) {
 
   $unit = rooms_unit_load($unit_id);
 
-  rooms_unit_save($unit);
+  if ($unit !== FALSE) {
+    $unit->name = (isset($rooms_unit_data['name'])) ? $rooms_unit_data['name'] : $unit->name;
+    $unit->default_state = (isset($rooms_unit_data['default_state'])) ? $rooms_unit_data['default_state'] : $unit->default_state;
+    $unit->bookable = (isset($rooms_unit_data['bookable'])) ? $rooms_unit_data['bookable'] : $unit->bookable;
+    $unit->status = (isset($rooms_unit_data['status'])) ? $rooms_unit_data['status'] : $unit->status;
+    $unit->uid = (isset($rooms_unit_data['uid'])) ? $rooms_unit_data['uid'] : $unit->uid;
+
+    $unit->changed = REQUEST_TIME;
+
+    rooms_unit_save($unit);
+
+    $return->status = 1;
+  }
+  else {
+    $return->status = 0;
+  }
 
   return $return;
 }
 
 /**
+ * Retrieves data in for each unit in a order list of unit ids.
  *
+ * @param $unit_ids
+ * @param $start_date
+ * @param $duration
  */
 function bam_api_services_availability_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
@@ -469,26 +532,40 @@ function bam_api_services_availability_index($unit_ids, $start_date, $duration) 
 }
 
 /**
+ * Update the availability for a given unit.
  *
+ * @param $unit_id
+ * @param $availability_info
  */
 function bam_api_services_update_availability($unit_id, $availability_info) {
   $return = new stdClass();
   $return->sessid = session_id();
 
   $event_id = $availability_info['event_id'];
-  $start_date = $availability_info['start_date'];
-  $end_date = $availability_info['end_date'];
+  $start_date = new DateTime($availability_info['start_date']);
+  $end_date = new DateTime($availability_info['end_date']);
 
   $be = new BookingEvent($unit_id, $event_id, $start_date, $end_date);
   $events = array($be);
   $rc = new UnitCalendar($unit_id);
   $response = $rc->updateCalendar($events);
 
+  if ($response[$event_id] == ROOMS_BLOCKED) {
+    $return->status = 0;
+  }
+  elseif ($response[$event_id] == ROOMS_UPDATED) {
+    $return->status = 1;
+  }
+
   return $return;
 }
 
 /**
+ * Retrieves pricing data in for each unit in an order list of unit ids.
  *
+ * @param $unit_ids
+ * @param $start_date
+ * @param $duration
  */
 function bam_api_services_pricing_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
@@ -522,7 +599,10 @@ function bam_api_services_pricing_index($unit_ids, $start_date, $duration) {
 }
 
 /**
+ * Update the pricing data for a given unit.
  *
+ * @param $unit_id
+ * @param $pricing_info
  */
 function bam_api_services_update_pricing($unit_id, $pricing_info) {
   $return = new stdClass();
@@ -536,11 +616,17 @@ function bam_api_services_update_pricing($unit_id, $pricing_info) {
 
   update_calendar_event($unit_id, $amount, $start_date, $end_date, $operation, $days);
 
+  $return->status = 1;
+
   return $return;
 }
 
 /**
+ * Provides bookings from the start date onwards ordered by unit ids.
  *
+ * @param $unit_ids
+ * @param $start_date
+ * @param $duration
  */
 function bam_api_services_booking_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
@@ -553,6 +639,7 @@ function bam_api_services_booking_index($unit_ids, $start_date, $duration) {
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
+  $query->orderBy('unit_id');
 
   $rooms_bookings = $query->execute()->fetchAll();
 
@@ -573,22 +660,44 @@ function bam_api_services_booking_index($unit_ids, $start_date, $duration) {
 }
 
 /**
+ * Create a new booking.
  *
+ * @param $name
+ * @param $type
+ * @param $start_date
+ * @param $end_date
  */
-function bam_api_services_add_booking($name, $type, $start_date, $end_date) {
+function bam_api_services_add_booking($name, $type, $start_date, $end_date, $unit_id) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $booking = rooms_booking_create(
-    array(
-      'name' => $name,
-      'type' => $type,
-      'start_date' => $start_date,
-      'end_date' => $end_date,
-    )
-  );
+  if (rooms_booking_type_load($type) !== FALSE) {
+    $booking = rooms_booking_create(
+      array(
+        'name' => $name,
+        'type' => $type,
+        'start_date' => $start_date,
+        'end_date' => $end_date,
+        'created' => REQUEST_TIME,
+        'changed' => REQUEST_TIME,
+      )
+    );
 
-  $return->booking_id = $booking->booking_id;
+    $unit = rooms_unit_load($unit_id);
+    if ($unit !== FALSE) {
+      $booking->unit_id = $unit_id;
+      $booking->unit_type = $unit->type;
+    }
+
+    rooms_booking_save($booking);
+
+    $return->booking_id = $booking->booking_id;
+
+    $return->status = 1;
+  }
+  else {
+    $return->status = 0;
+  }
 
   return $return;
 }
