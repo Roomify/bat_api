@@ -504,6 +504,16 @@ function bam_api_services_availability_index($unit_ids, $start_date, $duration) 
   $end_date_object = (clone($start_date_object));
   $end_date_object->add(new DateInterval('P' . $duration));
 
+  $today = new DateTime();
+  if (!user_access('view past availability information') && $today > $start_date_object) {
+    if ($today > $end_date_object) {
+      $return->events = array();
+      return $return;
+    }
+
+    $start_date_object = $today;
+  }
+
   $ids = explode(',', $unit_ids);
 
   $events_json = array();
