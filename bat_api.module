@@ -1,13 +1,13 @@
 <?php
 
 /**
- * API access to booking data
+ * API access to booking data for Rooms
  */
 
 /**
  * Implements hook_ctools_plugin_api().
  */
-function bam_api_ctools_plugin_api($module = NULL, $api = NULL) {
+function bat_api_ctools_plugin_api($module = NULL, $api = NULL) {
   if ($module == "services" && $api == "services") {
     return array("version" => "3");
   }
@@ -16,8 +16,8 @@ function bam_api_ctools_plugin_api($module = NULL, $api = NULL) {
 /**
  * Implements hook_ctools_plugin_directory().
  */
-function bam_api_ctools_plugin_directory($owner, $plugin_type) {
-  if ($owner == 'bam_api' && $plugin_type == 'rooms_unit_field_handler') {
+function bat_api_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'bat_api' && $plugin_type == 'rooms_unit_field_handler') {
     return 'plugins/rooms_unit_field_handler';
   }
 }
@@ -25,7 +25,7 @@ function bam_api_ctools_plugin_directory($owner, $plugin_type) {
 /**
  * Implements hook_ctools_plugin_type().
  */
-function bam_api_ctools_plugin_type() {
+function bat_api_ctools_plugin_type() {
   return array(
     'rooms_unit_field_handler' => array(
       'use hooks' => TRUE,
@@ -36,7 +36,7 @@ function bam_api_ctools_plugin_type() {
 /**
  * Implements hook_permission()
  */
-function bam_api_permission() {
+function bat_api_permission() {
   return array(
     'access units index service' =>  array(
       'title' => t('Access units index service'),
@@ -76,14 +76,14 @@ function bam_api_permission() {
 /**
  * Implements hook_services_resources().
  */
-function bam_api_services_resources() {
+function bat_api_services_resources() {
   $resources = array();
 
   $resources['units'] = array(
     'operations' => array(
       'index' => array(
-        'callback' => 'bam_api_services_units_index',
-        'help' => t('Returns an object containing rooms units information.'),
+        'callback' => 'bat_api_services_units_index',
+        'help' => t('Returns an object containing bookable unit information.'),
         'access arguments' => array('access units index service'),
         'args'     => array(
           array(
@@ -113,9 +113,9 @@ function bam_api_services_resources() {
         ),
       ),
       'update' => array(
-        'callback' => 'bam_api_services_edit_unit',
+        'callback' => 'bat_api_services_edit_unit',
         'access arguments' => array('access edit unit service'),
-        'help'     => t('Edit an existing Rooms Unit.'),
+        'help'     => t('Edit an existing Bookable Unit.'),
         'args'     => array(
           array(
             'name'         => 'unit_id',
@@ -136,9 +136,9 @@ function bam_api_services_resources() {
     ),
     'actions' => array(
       'add' => array(
-        'callback' => 'bam_api_services_add_unit',
+        'callback' => 'bat_api_services_add_unit',
         'access arguments' => array('access add unit service'),
-        'help'     => t('Add a new Rooms Unit.'),
+        'help'     => t('Add a new Bookable Unit.'),
         'args'     => array(
           array(
             'name'         => 'name',
@@ -183,7 +183,7 @@ function bam_api_services_resources() {
   $resources['availability'] = array(
     'operations' => array(
       'index' => array(
-        'callback' => 'bam_api_services_availability_index',
+        'callback' => 'bat_api_services_availability_index',
         'help' => t('Returns an object containing availability information.'),
         'access arguments' => array('access availability index service'),
         'args'     => array(
@@ -211,7 +211,7 @@ function bam_api_services_resources() {
         ),
       ),
       'update' => array(
-        'callback' => 'bam_api_services_update_availability',
+        'callback' => 'bat_api_services_update_availability',
         'access arguments' => array('access update availability service'),
         'help'     => t('Update the availability for a given unit.'),
         'args'     => array(
@@ -237,7 +237,7 @@ function bam_api_services_resources() {
   $resources['pricing'] = array(
     'operations' => array(
       'index' => array(
-        'callback' => 'bam_api_services_pricing_index',
+        'callback' => 'bat_api_services_pricing_index',
         'help' => t('Returns an object containing pricing information.'),
         'access arguments' => array('access pricing index service'),
         'args'     => array(
@@ -265,7 +265,7 @@ function bam_api_services_resources() {
         ),
       ),
       'update' => array(
-        'callback' => 'bam_api_services_update_pricing',
+        'callback' => 'bat_api_services_update_pricing',
         'access arguments' => array('access update pricing service'),
         'help'     => t('Update the pricing for a given unit.'),
         'args'     => array(
@@ -291,7 +291,7 @@ function bam_api_services_resources() {
   $resources['booking'] = array(
     'operations' => array(
       'index' => array(
-        'callback' => 'bam_api_services_booking_index',
+        'callback' => 'bat_api_services_booking_index',
         'help' => t('Returns an object containing booking information.'),
         'access arguments' => array('access booking index service'),
         'args'     => array(
@@ -321,7 +321,7 @@ function bam_api_services_resources() {
     ),
     'actions' => array(
       'add' => array(
-        'callback' => 'bam_api_services_add_booking',
+        'callback' => 'bat_api_services_add_booking',
         'access arguments' => array('access add booking service'),
         'help'     => t('Add a new Rooms Unit.'),
         'args'     => array(
@@ -366,12 +366,12 @@ function bam_api_services_resources() {
  *
  * @param $unit_ids
  */
-function bam_api_services_units_index($unit_ids, $offset, $limit) {
+function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $return = new stdClass();
   $return->sessid = session_id();
 
   ctools_include('plugins');
-  $field_handlers = ctools_get_plugins('bam_api', 'rooms_unit_field_handler');
+  $field_handlers = ctools_get_plugins('bat_api', 'rooms_unit_field_handler');
 
   $ids = array_filter(explode(',', $unit_ids));
 
@@ -425,7 +425,7 @@ function bam_api_services_units_index($unit_ids, $offset, $limit) {
  * @param $bookable
  * @param $status
  */
-function bam_api_services_add_unit($name, $type, $default_state, $bookable, $status) {
+function bat_api_services_add_unit($name, $type, $default_state, $bookable, $status) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -461,7 +461,7 @@ function bam_api_services_add_unit($name, $type, $default_state, $bookable, $sta
  * @param $unit_id
  * @param $rooms_unit_data
  */
-function bam_api_services_edit_unit($unit_id, $rooms_unit_data) {
+function bat_api_services_edit_unit($unit_id, $rooms_unit_data) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -494,7 +494,7 @@ function bam_api_services_edit_unit($unit_id, $rooms_unit_data) {
  * @param $start_date
  * @param $duration
  */
-function bam_api_services_availability_index($unit_ids, $start_date, $duration) {
+function bat_api_services_availability_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -543,7 +543,7 @@ function bam_api_services_availability_index($unit_ids, $start_date, $duration) 
  * @param $unit_id
  * @param $availability_info
  */
-function bam_api_services_update_availability($unit_id, $availability_info) {
+function bat_api_services_update_availability($unit_id, $availability_info) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -573,7 +573,7 @@ function bam_api_services_update_availability($unit_id, $availability_info) {
  * @param $start_date
  * @param $duration
  */
-function bam_api_services_pricing_index($unit_ids, $start_date, $duration) {
+function bat_api_services_pricing_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -610,7 +610,7 @@ function bam_api_services_pricing_index($unit_ids, $start_date, $duration) {
  * @param $unit_id
  * @param $pricing_info
  */
-function bam_api_services_update_pricing($unit_id, $pricing_info) {
+function bat_api_services_update_pricing($unit_id, $pricing_info) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -634,7 +634,7 @@ function bam_api_services_update_pricing($unit_id, $pricing_info) {
  * @param $start_date
  * @param $duration
  */
-function bam_api_services_booking_index($unit_ids, $start_date, $duration) {
+function bat_api_services_booking_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -673,7 +673,7 @@ function bam_api_services_booking_index($unit_ids, $start_date, $duration) {
  * @param $start_date
  * @param $end_date
  */
-function bam_api_services_add_booking($type, $start_date, $end_date, $unit_id) {
+function bat_api_services_add_booking($type, $start_date, $end_date, $unit_id) {
   $return = new stdClass();
   $return->sessid = session_id();
 

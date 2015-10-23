@@ -4,15 +4,15 @@
 /**
  * Implements hook_default_services_endpoint().
  */
-function bam_api_default_services_endpoint() {
+function bat_api_default_services_endpoint() {
   $export = array();
 
   $endpoint = new stdClass();
   $endpoint->disabled = FALSE; /* Edit this to true to make a default endpoint disabled initially */
   $endpoint->api_version = 3;
-  $endpoint->name = 'bam_api';
+  $endpoint->name = 'bat_api';
   $endpoint->server = 'rest_server';
-  $endpoint->path = 'bam/v1';
+  $endpoint->path = 'bat/v1';
   $endpoint->authentication = array(
     'services' => 'services',
   );
@@ -100,7 +100,7 @@ function bam_api_default_services_endpoint() {
     ),
   );
   $endpoint->debug = 0;
-  $export['bam_api'] = $endpoint;
+  $export['bat_api'] = $endpoint;
 
   return $export;
 }
