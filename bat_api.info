@@ -5,7 +5,7 @@ php = 5.3.9
 
 package = BAT
 
-dependencies[] = rooms_availability
+dependencies[] = bat_availability
 dependencies[] = rest_server
 dependencies[] = services
 
