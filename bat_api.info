@@ -1,5 +1,5 @@
 name = Booking and Availability Tools API
-description = Provides API access to Rooms Booking and Availability Data for Drupal 7
+description = Provides API access to BAT Booking and Availability Data for Drupal 7
 core = 7.x
 php = 5.3.9
 
@@ -9,4 +9,4 @@ dependencies[] = bat_availability
 dependencies[] = rest_server
 dependencies[] = services
 
-files[] = includes/bat_api.rooms_unit_field_handler.inc
+files[] = includes/bat_api.bat_unit_field_handler.inc

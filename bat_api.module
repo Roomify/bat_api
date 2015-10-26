@@ -1,8 +1,12 @@
 <?php
 
 /**
- * API access to booking data for Rooms
+ * API access to booking data for BAT
  */
+
+use \Drupal\bat_availability\BookingEvent;
+use \Drupal\bat_availability\UnitCalendar;
+
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -17,8 +21,8 @@ function bat_api_ctools_plugin_api($module = NULL, $api = NULL) {
  * Implements hook_ctools_plugin_directory().
  */
 function bat_api_ctools_plugin_directory($owner, $plugin_type) {
-  if ($owner == 'bat_api' && $plugin_type == 'rooms_unit_field_handler') {
-    return 'plugins/rooms_unit_field_handler';
+  if ($owner == 'bat_api' && $plugin_type == 'bat_unit_field_handler') {
+    return 'plugins/bat_unit_field_handler';
   }
 }
 
@@ -27,7 +31,7 @@ function bat_api_ctools_plugin_directory($owner, $plugin_type) {
  */
 function bat_api_ctools_plugin_type() {
   return array(
-    'rooms_unit_field_handler' => array(
+    'bat_unit_field_handler' => array(
       'use hooks' => TRUE,
     ),
   );
@@ -125,9 +129,9 @@ function bat_api_services_resources() {
             'optional'     => FALSE,
           ),
           array(
-            'name' => 'rooms_unit',
+            'name' => 'bat_unit',
             'type' => 'array',
-            'description' => t('The rooms unit data to update'),
+            'description' => t('The unit data to update'),
             'source' => 'data',
             'optional' => FALSE,
           ),
@@ -323,7 +327,7 @@ function bat_api_services_resources() {
       'add' => array(
         'callback' => 'bat_api_services_add_booking',
         'access arguments' => array('access add booking service'),
-        'help'     => t('Add a new Rooms Unit.'),
+        'help'     => t('Add a new Unit.'),
         'args'     => array(
           array(
             'name'         => 'type',
@@ -371,21 +375,21 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $return->sessid = session_id();
 
   ctools_include('plugins');
-  $field_handlers = ctools_get_plugins('bat_api', 'rooms_unit_field_handler');
+  $field_handlers = ctools_get_plugins('bat_api', 'bat_unit_field_handler');
 
   $ids = array_filter(explode(',', $unit_ids));
 
-  $query = db_select('rooms_units', 'n')
+  $query = db_select('bat_units', 'n')
             ->fields('n', array('unit_id', 'type', 'name', 'default_state', 'bookable', 'status'));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
   $query->orderBy('unit_id');
   $query->range($offset, $limit);
-  $rooms_units = $query->execute()->fetchAll();
+  $bat_units = $query->execute()->fetchAll();
 
   $units = array();
-  foreach ($rooms_units as $unit) {
+  foreach ($bat_units as $unit) {
     $units[$unit->unit_id] = array(
       'properties' => array(
         'type' => $unit->type,
@@ -400,7 +404,7 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
 
     foreach ($field_handlers as $handler) {
       $class = ctools_plugin_get_class($handler, 'handler');
-      $object_handler = new $class(rooms_unit_load($unit->unit_id));
+      $object_handler = new $class(bat_unit_load($unit->unit_id));
 
       $field_type = $object_handler->getFieldType();
       $field_info = $object_handler->getFieldInfo();
@@ -429,8 +433,8 @@ function bat_api_services_add_unit($name, $type, $default_state, $bookable, $sta
   $return = new stdClass();
   $return->sessid = session_id();
 
-  if (rooms_unit_type_load($type) !== FALSE && $name != '') {
-    $unit = rooms_unit_create(
+  if (bat_unit_type_load($type) !== FALSE && $name != '') {
+    $unit = bat_unit_create(
       array(
         'name' => $name,
         'type' => $type,
@@ -443,7 +447,7 @@ function bat_api_services_add_unit($name, $type, $default_state, $bookable, $sta
       )
     );
 
-    rooms_unit_save($unit);
+    bat_unit_save($unit);
 
     $return->unit_id = $unit->unit_id;
     $return->status = 1;
@@ -459,24 +463,24 @@ function bat_api_services_add_unit($name, $type, $default_state, $bookable, $sta
  * Update an existing unit.
  *
  * @param $unit_id
- * @param $rooms_unit_data
+ * @param $bat_unit_data
  */
-function bat_api_services_edit_unit($unit_id, $rooms_unit_data) {
+function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $unit = rooms_unit_load($unit_id);
+  $unit = bat_unit_load($unit_id);
 
   if ($unit !== FALSE) {
-    $unit->name = (isset($rooms_unit_data['name'])) ? $rooms_unit_data['name'] : $unit->name;
-    $unit->default_state = (isset($rooms_unit_data['default_state'])) ? $rooms_unit_data['default_state'] : $unit->default_state;
-    $unit->bookable = (isset($rooms_unit_data['bookable'])) ? $rooms_unit_data['bookable'] : $unit->bookable;
-    $unit->status = (isset($rooms_unit_data['status'])) ? $rooms_unit_data['status'] : $unit->status;
-    $unit->uid = (isset($rooms_unit_data['uid'])) ? $rooms_unit_data['uid'] : $unit->uid;
+    $unit->name = (isset($bat_unit_data['name'])) ? $bat_unit_data['name'] : $unit->name;
+    $unit->default_state = (isset($bat_unit_data['default_state'])) ? $bat_unit_data['default_state'] : $unit->default_state;
+    $unit->bookable = (isset($bat_unit_data['bookable'])) ? $bat_unit_data['bookable'] : $unit->bookable;
+    $unit->status = (isset($bat_unit_data['status'])) ? $bat_unit_data['status'] : $unit->status;
+    $unit->uid = (isset($bat_unit_data['uid'])) ? $bat_unit_data['uid'] : $unit->uid;
 
     $unit->changed = REQUEST_TIME;
 
-    rooms_unit_save($unit);
+    bat_unit_save($unit);
 
     $return->status = 1;
   }
@@ -498,7 +502,7 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $event_style = ROOMS_AVAILABILITY_ADMIN_STYLE;
+  $event_style = BAT_AVAILABILITY_ADMIN_STYLE;
 
   $start_date_object = new DateTime($start_date);
   $end_date_object = (clone($start_date_object));
@@ -519,13 +523,13 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
   $events_json = array();
 
   foreach ($ids as $id) {
-    $unit = rooms_unit_load($id);
+    $unit = bat_unit_load($id);
 
     $rc = new UnitCalendar($unit->unit_id, $unit->default_state);
     $events = $rc->getEvents($start_date_object, $end_date_object);
 
     foreach ($events as $event) {
-      if (variable_get('rooms_calendar_events_view', '0') == '0') {
+      if (variable_get('bat_calendar_events_view', '0') == '0') {
         $event->end_date->add(new DateInterval('P1D'));
       }
       $events_json[$id][] = $event->formatJson($event_style, $unit->name);
@@ -556,10 +560,10 @@ function bat_api_services_update_availability($unit_id, $availability_info) {
   $rc = new UnitCalendar($unit_id);
   $response = $rc->updateCalendar($events);
 
-  if ($response[$event_id] == ROOMS_BLOCKED) {
+  if ($response[$event_id] == BAT_BLOCKED) {
     $return->status = 0;
   }
-  elseif ($response[$event_id] == ROOMS_UPDATED) {
+  elseif ($response[$event_id] == BAT_UPDATED) {
     $return->status = 1;
   }
 
@@ -577,8 +581,8 @@ function bat_api_services_pricing_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $event_style = ROOMS_AVAILABILITY_ADMIN_STYLE;
-  $event_style = rooms_availability_get_style($event_style, $unit);
+  $event_style = BAT_AVAILABILITY_ADMIN_STYLE;
+  $event_style = BAT_availability_get_style($event_style, $unit);
 
   $start_date_object = new DateTime($start_date);
   $end_date_object = (clone($start_date_object));
@@ -589,7 +593,7 @@ function bat_api_services_pricing_index($unit_ids, $start_date, $duration) {
   $events_json = array();
 
   foreach ($ids as $id) {
-    $unit = rooms_unit_load($id);
+    $unit = bat_unit_load($id);
 
     $rc = new UnitPricingCalendar($unit->unit_id, $unit->default_state);
     $events = $rc->getEvents($start_date_object, $end_date_object);
@@ -640,23 +644,23 @@ function bat_api_services_booking_index($unit_ids, $start_date, $duration) {
 
   $ids = explode(',', $unit_ids);
 
-  $query = db_select('rooms_bookings', 'n')
+  $query = db_select('bat_bookings', 'n')
             ->fields('n', array('booking_id', 'type', 'name', 'unit_id', 'start_date', 'end_date'));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
   $query->orderBy('unit_id');
 
-  $rooms_bookings = $query->execute()->fetchAll();
+  $bat_bookings = $query->execute()->fetchAll();
 
   $bookings = array();
-  foreach ($rooms_bookings as $rooms_booking) {
-    $bookings[$rooms_booking->unit_id][] = array(
-      'booking_id' => $rooms_booking->booking_id,
-      'type' => $rooms_booking->type,
-      'name' => $rooms_booking->name,
-      'start_date' => $rooms_booking->start_date,
-      'end_date' => $rooms_booking->end_date,
+  foreach ($bat_bookings as $bat_booking) {
+    $bookings[$bat_booking->unit_id][] = array(
+      'booking_id' => $bat_booking->booking_id,
+      'type' => $bat_booking->type,
+      'name' => $bat_booking->name,
+      'start_date' => $bat_booking->start_date,
+      'end_date' => $bat_booking->end_date,
     );
   }
 
@@ -677,8 +681,8 @@ function bat_api_services_add_booking($type, $start_date, $end_date, $unit_id) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  if (rooms_booking_type_load($type) !== FALSE) {
-    $booking = rooms_booking_create(
+  if (bat_booking_type_load($type) !== FALSE) {
+    $booking = bat_booking_create(
       array(
         'type' => $type,
         'start_date' => $start_date,
@@ -688,13 +692,13 @@ function bat_api_services_add_booking($type, $start_date, $end_date, $unit_id) {
       )
     );
 
-    $unit = rooms_unit_load($unit_id);
+    $unit = bat_unit_load($unit_id);
     if ($unit !== FALSE) {
       $booking->unit_id = $unit_id;
       $booking->unit_type = $unit->type;
     }
 
-    rooms_booking_save($booking);
+    bat_booking_save($booking);
 
     $return->booking_id = $booking->booking_id;
 

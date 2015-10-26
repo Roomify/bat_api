@@ -1,15 +1,15 @@
 <?php
 
-interface RoomsUnitFieldHandlerInterface {
+interface BatUnitFieldHandlerInterface {
 	public function getFieldType();
 
 	public function getFieldInfo();
 }
 
-abstract class RoomsUnitFieldHandlerBase implements RoomsUnitFieldHandlerInterface {
+abstract class BatUnitFieldHandlerBase implements BatUnitFieldHandlerInterface {
 	protected $unit;
 
-	public function __construct(RoomsUnit $unit) {
+	public function __construct(BatUnit $unit) {
 		$this->unit = $unit;
 	}
 }

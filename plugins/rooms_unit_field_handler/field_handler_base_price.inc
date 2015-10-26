@@ -4,11 +4,11 @@
 $plugin = array(
   'label' => t('Base Price'),
   'handler' => array(
-    'class' => 'RoomsUnitFieldHandlerBasePrice',
+    'class' => 'BatUnitFieldHandlerBasePrice',
   ),
 );
 
-class RoomsUnitFieldHandlerBasePrice extends RoomsUnitFieldHandlerBase {
+class BatUnitFieldHandlerBasePrice extends BatUnitFieldHandlerBase {
   public function getFieldType() {
     return 'base_price';
   }
@@ -16,13 +16,13 @@ class RoomsUnitFieldHandlerBasePrice extends RoomsUnitFieldHandlerBase {
   public function getFieldInfo() {
     $price_fields = array();
 
-    $rooms_unit_type = rooms_unit_type_load($this->unit->type);
+    $bat_unit_type = bat_unit_type_load($this->unit->type);
     $base_price_field = NULL;
-    if (isset($rooms_unit_type->data['pricing_field'])) {
-      $base_price_field = $rooms_unit_type->data['pricing_field'];
+    if (isset($bat_unit_type->data['pricing_field'])) {
+      $base_price_field = $bat_unit_type->data['pricing_field'];
     }
 
-    $fields = field_info_instances('rooms_unit', $this->unit->type);
+    $fields = field_info_instances('bat_unit', $this->unit->type);
     foreach ($fields as $field) {
       $field_info = field_info_field($field['field_name']);
 
