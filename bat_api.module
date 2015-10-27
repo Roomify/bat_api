@@ -6,6 +6,8 @@
 
 use \Drupal\bat_availability\BookingEvent;
 use \Drupal\bat_availability\UnitCalendar;
+use \Drupal\bat_pricing\PricingEvent;
+use \Drupal\bat_pricing\UnitPricingCalendar;
 
 
 /**
@@ -582,7 +584,7 @@ function bat_api_services_pricing_index($unit_ids, $start_date, $duration) {
   $return->sessid = session_id();
 
   $event_style = BAT_AVAILABILITY_ADMIN_STYLE;
-  $event_style = BAT_availability_get_style($event_style, $unit);
+  $event_style = bat_availability_get_style($event_style, $unit);
 
   $start_date_object = new DateTime($start_date);
   $end_date_object = (clone($start_date_object));
