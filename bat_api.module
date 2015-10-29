@@ -498,8 +498,6 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $event_style = ROOMS_AVAILABILITY_ADMIN_STYLE;
-
   $start_date_object = new DateTime($start_date);
   $end_date_object = (clone($start_date_object));
   $end_date_object->add(new DateInterval('P' . $duration));
@@ -520,6 +518,8 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
 
   foreach ($ids as $id) {
     $unit = rooms_unit_load($id);
+
+    $event_style = rooms_availability_get_style(ROOMS_AVAILABILITY_ADMIN_STYLE, $unit);
 
     $rc = new UnitCalendar($unit->unit_id, $unit->default_state);
     $events = $rc->getEvents($start_date_object, $end_date_object);
@@ -577,9 +577,6 @@ function bat_api_services_pricing_index($unit_ids, $start_date, $duration) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $event_style = ROOMS_AVAILABILITY_ADMIN_STYLE;
-  $event_style = rooms_availability_get_style($event_style, $unit);
-
   $start_date_object = new DateTime($start_date);
   $end_date_object = (clone($start_date_object));
   $end_date_object->add(new DateInterval('P' . $duration));
@@ -595,7 +592,7 @@ function bat_api_services_pricing_index($unit_ids, $start_date, $duration) {
     $events = $rc->getEvents($start_date_object, $end_date_object);
 
     foreach ($events as $event) {
-      $events_json[$id][] = $event->formatJson($event_style, $unit->name);
+      $events_json[$id][] = $event->formatJson();
     }
   }
 
