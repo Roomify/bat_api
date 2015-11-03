@@ -6,6 +6,7 @@
 
 use \Drupal\bat_availability\BookingEvent;
 use \Drupal\bat_availability\UnitCalendar;
+use \Drupal\bat_pricing\UnitPricingCalendar;
 
 
 /**
