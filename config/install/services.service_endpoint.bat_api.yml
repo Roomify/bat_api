@@ -1,0 +1,37 @@
+uuid: 129c489d-2746-4f73-8a00-b5a95f6e1ab2
+langcode: en
+status: true
+dependencies: {  }
+id: bat_api
+label: 'Bat api'
+service_providers:
+  'entity_delete:availability_event': 'entity_delete:availability_event'
+  'entity_delete:availability_state': 'entity_delete:availability_state'
+  'entity_delete:property': 'entity_delete:property'
+  'entity_delete:unit': 'entity_delete:unit'
+  'entity_delete:unit_type': 'entity_delete:unit_type'
+  'entity_get:availability_event': 'entity_get:availability_event'
+  'entity_get:availability_state': 'entity_get:availability_state'
+  'entity_get:property': 'entity_get:property'
+  'entity_get:unit': 'entity_get:unit'
+  'entity_get:unit_type': 'entity_get:unit_type'
+  'entity_index:availability_event': 'entity_index:availability_event'
+  'entity_index:availability_state': 'entity_index:availability_state'
+  'entity_index:property': 'entity_index:property'
+  'entity_index:unit': 'entity_index:unit'
+  'entity_index:unit_type': 'entity_index:unit_type'
+  'entity_post:availability_event': 'entity_post:availability_event'
+  'entity_post:availability_state': 'entity_post:availability_state'
+  'entity_post:property': 'entity_post:property'
+  'entity_post:unit': 'entity_post:unit'
+  'entity_post:unit_type': 'entity_post:unit_type'
+  'entity_put:availability_event': 'entity_put:availability_event'
+  'entity_put:availability_state': 'entity_put:availability_state'
+  'entity_put:property': 'entity_put:property'
+  'entity_put:unit': 'entity_put:unit'
+  'entity_put:unit_type': 'entity_put:unit_type'
+  'entity_view:availability_event': 'entity_view:availability_event'
+  'entity_view:property': 'entity_view:property'
+  'entity_view:unit': 'entity_view:unit'
+  'entity_view:unit_type': 'entity_view:unit_type'
+endpoint: bat_api
