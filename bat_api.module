@@ -4,10 +4,8 @@
  * API access to booking data for BAT
  */
 
-use \Drupal\bat_availability\BookingEvent;
-use \Drupal\bat_availability\UnitCalendar;
-use \Drupal\bat_pricing\UnitPricingCalendar;
-
+use Drupal\bat\BatCalendar;
+use Drupal\bat\BatGranularEvent;
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -503,7 +501,13 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $event_style = BAT_AVAILABILITY_ADMIN_STYLE;
+  $state_store = array(
+    BatGranularEvent::BAT_DAY => 'bat_event_availability_event_day_state',
+    BatGranularEvent::BAT_HOUR => 'bat_event_availability_event_hour_state',
+    BatGranularEvent::BAT_MINUTE => 'bat_event_availability_event_minute_state'
+  );
+
+  $event_style = BAT_EVENT_CALENDAR_ADMIN_STYLE;
 
   $start_date_object = new DateTime($start_date);
   $end_date_object = (clone($start_date_object));
@@ -526,14 +530,13 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
   foreach ($ids as $id) {
     $unit = bat_unit_load($id);
 
-    $rc = new UnitCalendar($unit->unit_id, $unit->default_state);
+    $rc = new BatCalendar($state_store, array($unit->unit_id));
     $events = $rc->getEvents($start_date_object, $end_date_object);
 
-    foreach ($events as $event) {
-      if (variable_get('bat_calendar_events_view', '0') == '0') {
-        $event->end_date->add(new DateInterval('P1D'));
+    if (isset($events[$id])) {
+      foreach ($events[$id] as $event) {
+        $events_json[$id][] = $event->formatJson($event_style);
       }
-      $events_json[$id][] = $event->formatJson($event_style, $unit->name);
     }
   }
 
