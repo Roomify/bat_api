@@ -183,6 +183,46 @@ function bat_api_services_resources() {
     ),
   );
 
+  $resources['events'] = array(
+    'operations' => array(
+      'index' => array(
+        'callback' => 'bat_api_services_events_index',
+        'help' => t('Returns an object containing availability information.'),
+        'access arguments' => array('access availability index service'),
+        'args'     => array(
+          array(
+            'name'         => 'units',
+            'type'         => 'string',
+            'description'  => t('Unit IDs'),
+            'source'       => array('param' => 'units'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'start_date',
+            'type'         => 'string',
+            'description'  => t('Start date'),
+            'source'       => array('param' => 'start_date'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'duration',
+            'type'         => 'string',
+            'description'  => t('Duration'),
+            'source'       => array('param' => 'duration'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'type',
+            'type'         => 'string',
+            'description'  => t('Type'),
+            'source'       => array('param' => 'type'),
+            'optional'     => FALSE,
+          ),
+        ),
+      ),
+    ),
+  );
+
   $resources['availability'] = array(
     'operations' => array(
       'index' => array(
@@ -486,6 +526,54 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   else {
     $return->status = 0;
   }
+
+  return $return;
+}
+
+function bat_api_services_events_index($unit_ids, $start_date, $duration, $type) {
+  $return = new stdClass();
+  $return->sessid = session_id();
+
+  $state_store = array(
+    BatGranularEvent::BAT_DAY => 'bat_event_' . $type . '_day_state',
+    BatGranularEvent::BAT_HOUR => 'bat_event_' . $type . '_hour_state',
+    BatGranularEvent::BAT_MINUTE => 'bat_event_' . $type . '_minute_state'
+  );
+
+  $event_style = BAT_EVENT_CALENDAR_ADMIN_STYLE;
+
+  $start_date_object = new DateTime($start_date);
+  $end_date_object = (clone($start_date_object));
+  $end_date_object->add(new DateInterval('P' . $duration));
+
+  $today = new DateTime();
+  if (!user_access('view past availability information') && $today > $start_date_object) {
+    if ($today > $end_date_object) {
+      $return->events = array();
+      return $return;
+    }
+
+    $start_date_object = $today;
+  }
+
+  $ids = explode(',', $unit_ids);
+
+  $events_json = array();
+
+  foreach ($ids as $id) {
+    $unit = bat_unit_load($id);
+
+    $rc = new BatCalendar(array($unit->unit_id), $state_store);
+    $events = $rc->getEvents($start_date_object, $end_date_object);
+
+    if (isset($events[$id])) {
+      foreach ($events[$id] as $event) {
+        $events_json[$id][] = $event->formatJson($event_style);
+      }
+    }
+  }
+
+  $return->events = $events_json;
 
   return $return;
 }
