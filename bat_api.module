@@ -530,7 +530,7 @@ function bat_api_services_availability_index($unit_ids, $start_date, $duration) 
   foreach ($ids as $id) {
     $unit = bat_unit_load($id);
 
-    $rc = new BatCalendar($state_store, array($unit->unit_id));
+    $rc = new BatCalendar(array($unit->unit_id), $state_store);
     $events = $rc->getEvents($start_date_object, $end_date_object);
 
     if (isset($events[$id])) {
