@@ -8,6 +8,7 @@ use Drupal\bat\Event;
 use Drupal\bat\Calendar;
 use Drupal\bat\DrupalDBStore;
 use Drupal\bat\Unit;
+use Drupal\bat_event\EventFormatter;
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -567,7 +568,8 @@ function bat_api_services_events_index($unit_ids, $start_date, $duration, $type)
 
     if (isset($events[$id])) {
       foreach ($events[$id] as $event) {
-        $events_json[$id][] = $event->formatJson($event_style);
+        $event_formatter = new EventFormatter($event);
+        $events_json[$id][] = $event_formatter->formatJson($type);
       }
     }
   }
