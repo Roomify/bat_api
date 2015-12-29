@@ -4,8 +4,10 @@
  * API access to booking data for BAT
  */
 
-use Drupal\bat\BatCalendar;
-use Drupal\bat\BatGranularEvent;
+use Drupal\bat\Event;
+use Drupal\bat\Calendar;
+use Drupal\bat\DrupalDBStore;
+use Drupal\bat\Unit;
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -534,11 +536,7 @@ function bat_api_services_events_index($unit_ids, $start_date, $duration, $type)
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $state_store = array(
-    BatGranularEvent::BAT_DAY => 'bat_event_' . $type . '_day_state',
-    BatGranularEvent::BAT_HOUR => 'bat_event_' . $type . '_hour_state',
-    BatGranularEvent::BAT_MINUTE => 'bat_event_' . $type . '_minute_state'
-  );
+  $state_store = new DrupalDBStore($type, DrupalDBStore::BAT_STATE);
 
   $event_style = BAT_EVENT_CALENDAR_ADMIN_STYLE;
 
@@ -561,9 +559,10 @@ function bat_api_services_events_index($unit_ids, $start_date, $duration, $type)
   $events_json = array();
 
   foreach ($ids as $id) {
-    $unit = bat_unit_load($id);
+    $bat_unit = bat_unit_load($id);
+    $unit = new Unit($id, $bat_unit->getDefaultValue($type));
 
-    $rc = new BatCalendar(array($unit->unit_id), $state_store);
+    $rc = new Calendar(array($unit), $state_store);
     $events = $rc->getEvents($start_date_object, $end_date_object);
 
     if (isset($events[$id])) {
