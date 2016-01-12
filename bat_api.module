@@ -261,46 +261,94 @@ function bat_api_services_resources() {
     ),
   );
 
+  $resources['events2'] = array(
+    'operations' => array(
+      'index' => array(
+        'callback' => 'bat_api_services_events_index_calendar',
+        'help' => t('Returns an object containing availability information.'),
+        'access arguments' => array('access availability index service'),
+        'args'     => array(
+          array(
+            'name'         => 'unit_ids',
+            'type'         => 'string',
+            'description'  => t('Unit IDs'),
+            'source'       => array('param' => 'unit_ids'),
+            'optional'     => TRUE,
+          ),
+          array(
+            'name'         => 'unit_types',
+            'type'         => 'string',
+            'description'  => t('Unit Types'),
+            'source'       => array('param' => 'unit_types'),
+            'optional'     => TRUE,
+          ),
+          array(
+            'name'         => 'start',
+            'type'         => 'string',
+            'description'  => t('Start date'),
+            'source'       => array('param' => 'start'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'end',
+            'type'         => 'string',
+            'description'  => t('End date'),
+            'source'       => array('param' => 'end'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'event_types',
+            'type'         => 'string',
+            'description'  => t('Type'),
+            'source'       => array('param' => 'event_types'),
+            'optional'     => FALSE,
+          ),
+        ),
+      ),
+    ),
+  );
+
   return $resources;
 }
 
 function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, $limit) {
-  $return = new stdClass();
-  $return->sessid = session_id();
-
   $ids = array_filter(explode(',', $unit_ids));
   $types = array_filter(explode(',', $unit_types));
 
   $query = db_select('bat_units', 'n')
-            ->fields('n', array('unit_id', 'type', 'name', 'language', 'bookable', 'status', 'uid'));
+            ->fields('n', array('unit_id', 'type_id', 'type', 'name'));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
   if (!empty($types)) {
-    $query->condition('type', $types, 'IN');
+    $query->condition('type_id', $types, 'IN');
   }
   $query->orderBy('type');
   $query->range($offset, $limit);
   $bat_units = $query->execute()->fetchAll();
 
   $units = array();
-  foreach ($bat_units as $unit) {
-    if (!isset($units[$unit->type])) {
-      $units[$unit->type] = array(
-        'id' => $unit->type,
-        'title' => $unit->type,
-      );
-    }
 
-    $units[$unit->type]['children'][] = array(
-      'id' => $unit->unit_id,
+  $childrens = array();
+
+  foreach ($bat_units as $unit) {
+    $childrens[$unit->type_id][] = array(
+      'id' => 'S' . $unit->unit_id,
       'title' => $unit->name,
     );
   }
 
-  $return->units = $units;
+  foreach ($childrens as $type_id => $children) {
+    $unit_type = bat_type_load($unit->type_id);
 
-  return $return;
+    $units[] = array(
+      'id' => $unit_type->type_id,
+      'title' => $unit_type->name,
+      'children' => $children,
+    );
+  }
+
+  return $units;
 }
 
 /**
@@ -484,4 +532,69 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
   $return->events = $events_json;
 
   return $return;
+}
+
+function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
+  $unit_types = array_filter(explode(',', $unit_types));
+
+  $types = array_filter(explode(',', $event_types));
+
+  $events_json = array();
+
+  foreach ($types as $type) {
+    $state_store = new DrupalDBStore($type, DrupalDBStore::BAT_STATE);
+
+    $start_date_object = new DateTime($start_date);
+    $end_date_object = new DateTime($end_date);
+
+    $today = new DateTime();
+    if (!user_access('view past availability information') && $today > $start_date_object) {
+      if ($today > $end_date_object) {
+        $return->events = array();
+        return $return;
+      }
+
+      $start_date_object = $today;
+    }
+
+    $ids = array_filter(explode(',', $unit_ids));
+
+    $query = db_select('bat_units', 'n')
+            ->fields('n', array('unit_id', 'type', 'name'));
+    if (!empty($ids)) {
+      $query->condition('unit_id', $ids, 'IN');
+    }
+    if (!empty($types)) {
+      $query->condition('type_id', $unit_types, 'IN');
+    }
+    $query->orderBy('unit_id');
+    $bat_units = $query->execute()->fetchAll();
+
+    $units = array();
+    foreach ($bat_units as $unit) {
+      if ($bat_unit = bat_unit_load($unit->unit_id)) {
+        $units[] = new Unit($unit->unit_id, $bat_unit->getDefaultValue($type));
+      }
+    }
+
+    $index = 1;
+
+    if (!empty($units)) {
+      $rc = new Calendar($units, $state_store);
+      $events = $rc->getEvents($start_date_object, $end_date_object);
+
+      $event_formatter = new FullCalendarEventFormatter($type);
+
+      foreach ($events as $unit_id => $unit_events) {
+        foreach ($unit_events as $event) {
+          $events_json[] = array(
+            'id' => (string)$index++,
+            'resourceId' => 'S' . $unit_id,
+          ) + $event->toJson($event_formatter);
+        }
+      }
+    }
+  }
+
+  return $events_json;
 }

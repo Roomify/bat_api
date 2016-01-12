@@ -65,6 +65,13 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
+    'events2' => array(
+      'operations' => array(
+        'index' => array(
+          'enabled' => '1',
+        ),
+      ),
+    ),
     'user' => array(
       'actions' => array(
         'login' => array(
