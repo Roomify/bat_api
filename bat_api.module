@@ -4,11 +4,11 @@
  * API access to booking data for BAT
  */
 
-use Drupal\bat\Event;
-use Drupal\bat\Calendar;
-use Drupal\bat\DrupalDBStore;
-use Drupal\bat\Unit;
-use Drupal\bat_event\EventFormatter;
+use Roomify\Bat\Event\Event;
+use Roomify\Bat\Calendar\Calendar;
+use Roomify\Bat\Store\DrupalDBStore;
+use Roomify\Bat\Unit\Unit;
+use Drupal\bat_event_ui\FullCalendarEventFormatter;
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -208,10 +208,10 @@ function bat_api_services_resources() {
             'optional'     => FALSE,
           ),
           array(
-            'name'         => 'duration',
+            'name'         => 'end_date',
             'type'         => 'string',
-            'description'  => t('Duration'),
-            'source'       => array('param' => 'duration'),
+            'description'  => t('End date'),
+            'source'       => array('param' => 'end_date'),
             'optional'     => FALSE,
           ),
           array(
@@ -533,7 +533,7 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   return $return;
 }
 
-function bat_api_services_events_index($unit_ids, $start_date, $duration, $type) {
+function bat_api_services_events_index($unit_ids, $start_date, $end_date, $type) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -542,8 +542,7 @@ function bat_api_services_events_index($unit_ids, $start_date, $duration, $type)
   $event_style = BAT_EVENT_CALENDAR_ADMIN_STYLE;
 
   $start_date_object = new DateTime($start_date);
-  $end_date_object = (clone($start_date_object));
-  $end_date_object->add(new DateInterval('P' . $duration));
+  $end_date_object = new DateTime($end_date);
 
   $today = new DateTime();
   if (!user_access('view past availability information') && $today > $start_date_object) {
@@ -568,8 +567,8 @@ function bat_api_services_events_index($unit_ids, $start_date, $duration, $type)
 
     if (isset($events[$id])) {
       foreach ($events[$id] as $event) {
-        $event_formatter = new EventFormatter($event);
-        $events_json[$id][] = $event_formatter->formatJson($type);
+        $event_formatter = new FullCalendarEventFormatter();
+        $events_json[$id][] = $event->toJson($event_formatter);
       }
     }
   }
