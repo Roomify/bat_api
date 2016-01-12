@@ -51,41 +51,16 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
+    'units2' => array(
+      'operations' => array(
+        'index' => array(
+          'enabled' => '1',
+        ),
+      ),
+    ),
     'events' => array(
       'operations' => array(
         'index' => array(
-          'enabled' => '1',
-        ),
-      ),
-    ),
-    'availability' => array(
-      'operations' => array(
-        'index' => array(
-          'enabled' => '1',
-        ),
-        'update' => array(
-          'enabled' => '1',
-        ),
-      ),
-    ),
-    'pricing' => array(
-      'operations' => array(
-        'index' => array(
-          'enabled' => '1',
-        ),
-        'update' => array(
-          'enabled' => '1',
-        ),
-      ),
-    ),
-    'booking' => array(
-      'operations' => array(
-        'index' => array(
-          'enabled' => '1',
-        ),
-      ),
-      'actions' => array(
-        'add' => array(
           'enabled' => '1',
         ),
       ),
