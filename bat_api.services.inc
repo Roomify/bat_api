@@ -51,7 +51,7 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
-    'units2' => array(
+    'units-calendar' => array(
       'operations' => array(
         'index' => array(
           'enabled' => '1',
@@ -65,7 +65,7 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
-    'events2' => array(
+    'events-calendar' => array(
       'operations' => array(
         'index' => array(
           'enabled' => '1',

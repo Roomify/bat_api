@@ -163,7 +163,7 @@ function bat_api_services_resources() {
     ),
   );
 
-  $resources['units2'] = array(
+  $resources['units-calendar'] = array(
     'operations' => array(
       'index' => array(
         'callback' => 'bat_api_services_units_index_calendar',
@@ -254,7 +254,7 @@ function bat_api_services_resources() {
     ),
   );
 
-  $resources['events2'] = array(
+  $resources['events-calendar'] = array(
     'operations' => array(
       'index' => array(
         'callback' => 'bat_api_services_events_index_calendar',
