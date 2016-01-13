@@ -558,13 +558,16 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
   $events_json = array();
 
   foreach ($types as $type) {
+    // For each type of event create a state store and an event store
     $state_store = new DrupalDBStore($type, DrupalDBStore::BAT_STATE);
+
+    $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT);
 
     $start_date_object = new DateTime($start_date);
     $end_date_object = new DateTime($end_date);
 
     $today = new DateTime();
-    if (!user_access('view past availability information') && $today > $start_date_object) {
+    if (!user_access('view past event information') && $today > $start_date_object) {
       if ($today > $end_date_object) {
         $return->events = array();
         return $return;
@@ -596,15 +599,19 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
     $index = 1;
 
     if (!empty($units)) {
-      $rc = new Calendar($units, $state_store);
-      $events = $rc->getEvents($start_date_object, $end_date_object);
+      $state_calendar = new Calendar($units, $state_store);
+      $event_calendar = new Calendar($units, $event_store);
+
+      $events = $state_calendar->getEvents($start_date_object, $end_date_object);
+
+      $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
       $event_formatter = new FullCalendarEventFormatter($type);
 
       foreach ($events as $unit_id => $unit_events) {
-        foreach ($unit_events as $event) {
+        foreach ($unit_events as $key=>$event) {
           $events_json[] = array(
-            'id' => (string)$index++,
+            'id' => (string)$event_ids[$unit_id][$key]->getValue(),
             'resourceId' => 'S' . $unit_id,
           ) + $event->toJson($event_formatter);
         }
