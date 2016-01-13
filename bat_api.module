@@ -152,13 +152,6 @@ function bat_api_services_resources() {
             'optional'     => FALSE,
           ),
           array(
-            'name'         => 'bookable',
-            'type'         => 'integer',
-            'description'  => t('Bookable'),
-            'source'       => array('data' => 'bookable'),
-            'optional'     => FALSE,
-          ),
-          array(
             'name'         => 'status',
             'type'         => 'integer',
             'description'  => t('Published'),
@@ -366,7 +359,7 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $ids = array_filter(explode(',', $unit_ids));
 
   $query = db_select('bat_units', 'n')
-            ->fields('n', array('unit_id', 'type', 'name', 'language', 'bookable', 'status', 'uid'));
+            ->fields('n', array('unit_id', 'type', 'name', 'language', 'status', 'uid'));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
@@ -381,7 +374,6 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
         'type' => $unit->type,
         'name' => $unit->name,
         'language' => $unit->language,
-        'bookable' => $unit->bookable,
         'status' => $unit->status,
         'uid' => $unit->uid,
       ),
@@ -413,10 +405,9 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
  * @param $name
  * @param $type
  * @param $default_state
- * @param $bookable
  * @param $status
  */
-function bat_api_services_add_unit($name, $type, $default_state, $bookable, $status) {
+function bat_api_services_add_unit($name, $type, $default_state, $status) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -426,7 +417,6 @@ function bat_api_services_add_unit($name, $type, $default_state, $bookable, $sta
         'name' => $name,
         'type' => $type,
         'default_state' => $default_state,
-        'bookable' => $bookable,
         'status' => $status,
         'uid' => 0,
         'created' => REQUEST_TIME,
@@ -461,7 +451,6 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   if ($unit !== FALSE) {
     $unit->name = (isset($bat_unit_data['name'])) ? $bat_unit_data['name'] : $unit->name;
     $unit->default_state = (isset($bat_unit_data['default_state'])) ? $bat_unit_data['default_state'] : $unit->default_state;
-    $unit->bookable = (isset($bat_unit_data['bookable'])) ? $bat_unit_data['bookable'] : $unit->bookable;
     $unit->status = (isset($bat_unit_data['status'])) ? $bat_unit_data['status'] : $unit->status;
     $unit->uid = (isset($bat_unit_data['uid'])) ? $bat_unit_data['uid'] : $unit->uid;
 
