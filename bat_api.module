@@ -315,7 +315,7 @@ function bat_api_services_resources() {
  */
 function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, $limit) {
   $ids = array_filter(explode(',', $unit_ids));
-  $types = array_filter(explode(',', $unit_types));
+  $types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
 
   $query = db_select('bat_units', 'n')
             ->fields('n', array('unit_id', 'type_id', 'type', 'name'));
@@ -341,7 +341,7 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, 
   }
 
   foreach ($childrens as $type_id => $children) {
-    $unit_type = bat_type_load($unit->type_id);
+    $unit_type = bat_type_load($type_id);
 
     $units[] = array(
       'id' => $unit_type->type_id,
@@ -517,7 +517,7 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
     foreach ($ids as $id) {
       if ($bat_unit = bat_unit_load($id)) {
         if (in_array($bat_unit->type, $unit_types) || empty($unit_types)) {
-          $units[] = new Unit($id, $bat_unit->getDefaultValue($type));
+          $units[] = new Unit($id, $bat_unit->getEventDefaultValue($type));
         }
       }
     }
@@ -551,7 +551,7 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
  * @param $event_types
  */
 function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
-  $unit_types = array_filter(explode(',', $unit_types));
+  $unit_types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
 
   $types = array_filter(explode(',', $event_types));
 
@@ -580,7 +580,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
     if (!empty($ids)) {
       $query->condition('unit_id', $ids, 'IN');
     }
-    if (!empty($types)) {
+    if (!empty($unit_types)) {
       $query->condition('type_id', $unit_types, 'IN');
     }
     $query->orderBy('unit_id');
@@ -589,7 +589,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
     $units = array();
     foreach ($bat_units as $unit) {
       if ($bat_unit = bat_unit_load($unit->unit_id)) {
-        $units[] = new Unit($unit->unit_id, $bat_unit->getDefaultValue($type));
+        $units[] = new Unit($unit->unit_id, $bat_unit->getEventDefaultValue($type));
       }
     }
 
