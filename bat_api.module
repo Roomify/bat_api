@@ -48,17 +48,25 @@ function bat_api_permission() {
       'title' => t('Access units index service'),
       'description' => t('Access units index service.'),
     ),
+    'access edit unit service' =>  array(
+      'title' => t('Access edit unit service'),
+      'description' => t('Access edit unit service.'),
+    ),
     'access add unit service' =>  array(
       'title' => t('Access add unit service'),
       'description' => t('Access add unit service.'),
     ),
-    'access booking index service' =>  array(
-      'title' => t('Access booking index service'),
-      'description' => t('Access booking index service.'),
+    'access units calendar index service' =>  array(
+      'title' => t('Access units calendar index service'),
+      'description' => t('Access units calendar index service.'),
     ),
-    'access add booking service' =>  array(
-      'title' => t('Access add booking service'),
-      'description' => t('Access add booking service.'),
+    'access events index service' =>  array(
+      'title' => t('Access events index service'),
+      'description' => t('Access events index service.'),
+    ),
+    'access events calendar index service' =>  array(
+      'title' => t('Access events calendar index service'),
+      'description' => t('Access events calendar index service.'),
     ),
   );
 }
@@ -73,7 +81,7 @@ function bat_api_services_resources() {
     'operations' => array(
       'index' => array(
         'callback' => 'bat_api_services_units_index',
-        'help' => t('Returns an object containing bookable unit information.'),
+        'help' => t('Returns an object containing units information.'),
         'access arguments' => array('access units index service'),
         'args'     => array(
           array(
@@ -145,13 +153,6 @@ function bat_api_services_resources() {
             'optional'     => FALSE,
           ),
           array(
-            'name'         => 'default_state',
-            'type'         => 'integer',
-            'description'  => t('Default availability'),
-            'source'       => array('data' => 'default_state'),
-            'optional'     => FALSE,
-          ),
-          array(
             'name'         => 'status',
             'type'         => 'integer',
             'description'  => t('Published'),
@@ -167,8 +168,8 @@ function bat_api_services_resources() {
     'operations' => array(
       'index' => array(
         'callback' => 'bat_api_services_units_index_calendar',
-        'help' => t('Returns an object containing bookable unit information.'),
-        'access arguments' => array('access units index service'),
+        'help' => t('Returns an object containing units information.'),
+        'access arguments' => array('access units calendar index service'),
         'args'     => array(
           array(
             'name'         => 'types',
@@ -211,8 +212,8 @@ function bat_api_services_resources() {
     'operations' => array(
       'index' => array(
         'callback' => 'bat_api_services_events_index',
-        'help' => t('Returns an object containing availability information.'),
-        'access arguments' => array('access availability index service'),
+        'help' => t('Returns an object containing events information.'),
+        'access arguments' => array('access events index service'),
         'args'     => array(
           array(
             'name'         => 'unit_ids',
@@ -258,8 +259,8 @@ function bat_api_services_resources() {
     'operations' => array(
       'index' => array(
         'callback' => 'bat_api_services_events_index_calendar',
-        'help' => t('Returns an object containing availability information.'),
-        'access arguments' => array('access availability index service'),
+        'help' => t('Returns an object containing events information.'),
+        'access arguments' => array('access events calendar index service'),
         'args'     => array(
           array(
             'name'         => 'unit_ids',
@@ -304,6 +305,14 @@ function bat_api_services_resources() {
   return $resources;
 }
 
+/**
+ * Retrieve a list of units to use with Fullcalendar scheduler.
+ *
+ * @param $unit_types
+ * @param $unit_ids
+ * @param $offset
+ * @param $limit
+ */
 function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, $limit) {
   $ids = array_filter(explode(',', $unit_ids));
   $types = array_filter(explode(',', $unit_types));
@@ -348,6 +357,8 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, 
  * Retrieve a list of units.
  *
  * @param $unit_ids
+ * @param $offset
+ * @param $limit
  */
 function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $return = new stdClass();
@@ -404,10 +415,9 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
  *
  * @param $name
  * @param $type
- * @param $default_state
  * @param $status
  */
-function bat_api_services_add_unit($name, $type, $default_state, $status) {
+function bat_api_services_add_unit($name, $type, $status) {
   $return = new stdClass();
   $return->sessid = session_id();
 
@@ -416,7 +426,6 @@ function bat_api_services_add_unit($name, $type, $default_state, $status) {
       array(
         'name' => $name,
         'type' => $type,
-        'default_state' => $default_state,
         'status' => $status,
         'uid' => 0,
         'created' => REQUEST_TIME,
@@ -467,6 +476,15 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   return $return;
 }
 
+/**
+ * Retrieve a list of events.
+ *
+ * @param $unit_ids
+ * @param $unit_types
+ * @param $start_date
+ * @param $end_date
+ * @param $event_types
+ */
 function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
   $return = new stdClass();
   $return->sessid = session_id();
@@ -523,6 +541,15 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
   return $return;
 }
 
+/**
+ * Retrieve a list of events to use with Fullcalendar scheduler.
+ *
+ * @param $unit_ids
+ * @param $unit_types
+ * @param $start_date
+ * @param $end_date
+ * @param $event_types
+ */
 function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
   $unit_types = array_filter(explode(',', $unit_types));
 
