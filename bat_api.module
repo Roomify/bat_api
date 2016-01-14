@@ -253,6 +253,27 @@ function bat_api_services_resources() {
           ),
         ),
       ),
+      'update' => array(
+        'callback' => 'bat_api_services_edit_event',
+        'access arguments' => array('access edit event service'),
+        'help'     => t('Edit an existing Event.'),
+        'args'     => array(
+          array(
+            'name'         => 'event_id',
+            'type'         => 'integer',
+            'description'  => t('Event ID'),
+            'source'       => array('path' => 0),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name' => 'bat_event',
+            'type' => 'array',
+            'description' => t('The event data to update'),
+            'source' => 'data',
+            'optional' => FALSE,
+          ),
+        ),
+      ),
     ),
   );
 
@@ -639,6 +660,45 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
   return array_values($events_json);
 }
 
+/**
+ * Update an existing event.
+ *
+ * @param $event_id
+ * @param $bat_event_data
+ */
+function bat_api_services_edit_event($event_id, $bat_event_data) {
+  $return = new stdClass();
+  $return->sessid = session_id();
+
+  $event = bat_event_load($event_id);
+
+  if ($event !== FALSE) {
+    $event->start_date = (isset($bat_event_data['start_date'])) ? $bat_event_data['start_date'] : $event->start_date;
+    $event->end_date = (isset($bat_event_data['end_date'])) ? $bat_event_data['end_date'] : $event->end_date;
+    $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : $event->uid;
+    $event->changed = REQUEST_TIME;
+
+    // Set new unit_id if present.
+    if (isset($bat_event_data['unit_id'])) {
+      $event->event_unit_reference = array(
+        LANGUAGE_NONE => array(
+          0 => array(
+            'target_id' => $bat_event_data['unit_id'],
+          )
+        )
+      );
+    }
+
+    $event->save();
+
+    $return->status = 1;
+  }
+  else {
+    $return->status = 0;
+  }
+
+  return $return;
+}
 /**
  * Merge non blocking events.
  *
