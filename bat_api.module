@@ -554,7 +554,15 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
 function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
   $unit_types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
 
-  $types = array_filter(explode(',', $event_types));
+  if ($event_types == 'all') {
+    $types = array();
+    foreach (bat_event_get_types() as $type => $info) {
+      $types[] = $type;
+    }
+  }
+  else {
+    $types = array_filter(explode(',', $event_types));
+  }
 
   $events_json = array();
 
