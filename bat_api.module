@@ -558,9 +558,10 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
   $events_json = array();
 
   foreach ($types as $type) {
-    // For each type of event create a state store and an event store
-    $state_store = new DrupalDBStore($type, DrupalDBStore::BAT_STATE);
+    // Get the event type definition from Drupal
+    $bat_event_type = bat_event_type_load($type);
 
+    // For each type of event create a state store and an event store
     $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT);
 
     $start_date_object = new DateTime($start_date);
@@ -572,46 +573,46 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
         $return->events = array();
         return $return;
       }
-
       $start_date_object = $today;
     }
 
     $ids = array_filter(explode(',', $unit_ids));
 
+    // Get all units for a given type
     $query = db_select('bat_units', 'n')
             ->fields('n', array('unit_id', 'type', 'name'));
+    // and optionally limit to specific ids if defined in API call
     if (!empty($ids)) {
       $query->condition('unit_id', $ids, 'IN');
     }
+    // and types
     if (!empty($unit_types)) {
       $query->condition('type_id', $unit_types, 'IN');
     }
     $query->orderBy('unit_id');
     $bat_units = $query->execute()->fetchAll();
 
+    // Create an array of unit objects - the default value is set to 0 since we want
+    // to know if the value in the database is actually 0. This will allow us to identify
+    // which events are represented by events in the database (i.e. have a value different to 0)
     $units = array();
     foreach ($bat_units as $unit) {
-      if ($bat_unit = bat_unit_load($unit->unit_id)) {
-        $units[] = new Unit($unit->unit_id, $bat_unit->getEventDefaultValue($type));
-      }
+      $units[] = new Unit($unit->unit_id, 0);
     }
 
-    $index = 1;
-
     if (!empty($units)) {
-      $state_calendar = new Calendar($units, $state_store);
       $event_calendar = new Calendar($units, $event_store);
-
-      $events = $state_calendar->getEvents($start_date_object, $end_date_object);
 
       $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
-      $event_formatter = new FullCalendarEventFormatter($type);
+      //@TODO - this is an undeclared dependency of bat_event_ui
+      $event_formatter = new FullCalendarEventFormatter($bat_event_type);
 
-      foreach ($events as $unit_id => $unit_events) {
-        foreach ($unit_events as $key=>$event) {
+      foreach ($event_ids as $unit_id => $unit_events) {
+        foreach ($unit_events as $key => $event) {
           $events_json[] = array(
-            'id' => (string)$event_ids[$unit_id][$key]->getValue(),
+            'id' => (string)$key . $unit_id,
+            'bat_id' => $event->getValue(),
             'resourceId' => 'S' . $unit_id,
           ) + $event->toJson($event_formatter);
         }
