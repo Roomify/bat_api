@@ -8,7 +8,8 @@ use Roomify\Bat\Event\Event;
 use Roomify\Bat\Calendar\Calendar;
 use Roomify\Bat\Store\DrupalDBStore;
 use Roomify\Bat\Unit\Unit;
-use Drupal\bat_event_ui\FullCalendarEventFormatter;
+use Drupal\bat_event_ui\FullCalendarOpenStateEventFormatter;
+use Drupal\bat_event_ui\FullCalendarFixedStateEventFormatter;
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -605,8 +606,13 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
 
       $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
-      //@TODO - this is an undeclared dependency of bat_event_ui
-      $event_formatter = new FullCalendarEventFormatter($bat_event_type);
+      // @TODO - this is an undeclared dependency of bat_event_ui
+      if ($bat_event_type->fixed_event_states) {
+        $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type);
+      }
+      else {
+        $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type);
+      }
 
       foreach ($event_ids as $unit_id => $unit_events) {
         foreach ($unit_events as $key => $event) {
