@@ -539,7 +539,9 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
     foreach ($ids as $id) {
       if ($bat_unit = bat_unit_load($id)) {
         if (in_array($bat_unit->type, $unit_types) || empty($unit_types)) {
-          $units[] = new Unit($id, $bat_unit->getEventDefaultValue($type));
+          // Setting the default value to 0 since we are dealing with the events array
+          // so getting event IDs.
+          $units[] = new Unit($id, 0);
         }
       }
     }
@@ -711,7 +713,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
   return $return;
 }
 /**
- * Merge non blocking events.
+ * Merge non blocking events so that we display them as a continuous single event.
  *
  * @param $events array
  *
