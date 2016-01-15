@@ -548,7 +548,13 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
       $rc = new Calendar($units, $state_store);
       $events = $rc->getEvents($start_date_object, $end_date_object);
 
-      $event_formatter = new FullCalendarEventFormatter($type);
+      // @TODO - this is an undeclared dependency of bat_event_ui
+      if ($bat_event_type->fixed_event_states) {
+        $event_formatter = new FullCalendarFixedStateEventFormatter($type);
+      }
+      else {
+        $event_formatter = new FullCalendarOpenStateEventFormatter($type);
+      }
 
       foreach ($events as $unit_id => $unit_events) {
         foreach ($unit_events as $event) {
