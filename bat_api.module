@@ -681,11 +681,10 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
  */
 function bat_api_services_edit_event($event_id, $bat_event_data) {
   $return = new stdClass();
+  $return->status = 0;
   $return->sessid = session_id();
 
-  $event = bat_event_load($event_id);
-
-  if ($event !== FALSE) {
+  if ($event_id && $event = bat_event_load($event_id)) {
     $event->start_date = (isset($bat_event_data['start_date'])) ? $bat_event_data['start_date'] : $event->start_date;
     $event->end_date = (isset($bat_event_data['end_date'])) ? $bat_event_data['end_date'] : $event->end_date;
     $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : $event->uid;
@@ -702,12 +701,52 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
       );
     }
 
-    $event->save();
+    // Set new state id if present.
+    if (isset($bat_event_data['state_id'])) {
+      $event->event_state_reference = array(
+        LANGUAGE_NONE => array(
+          0 => array(
+            'state_id' => $bat_event_data['state_id'],
+          )
+        )
+      );
+    }
 
+    $event->save();
     $return->status = 1;
   }
-  else {
-    $return->status = 0;
+  elseif ($event_id == 'undefined') {
+    // This is a new event, save it.
+    $event = bat_event_create(array('type' => $bat_event_data['type']));
+    $event->start_date = $bat_event_data['start_date'];
+    $event->end_date = $bat_event_data['end_date'];
+    $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : 0;
+    $event->changed = REQUEST_TIME;
+
+    // Set new unit_id if present.
+    if (isset($bat_event_data['unit_id'])) {
+      $event->event_unit_reference = array(
+        LANGUAGE_NONE => array(
+          0 => array(
+            'target_id' => $bat_event_data['unit_id'],
+          )
+        )
+      );
+    }
+
+    // Set new state id if present.
+    if (isset($bat_event_data['state_id'])) {
+      $event->event_state_reference = array(
+        LANGUAGE_NONE => array(
+          0 => array(
+            'state_id' => $bat_event_data['state_id'],
+          )
+        )
+      );
+    }
+
+    $event->save();
+    $return->status = 1;
   }
 
   return $return;
