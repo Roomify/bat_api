@@ -1,15 +1,15 @@
 <?php
 
 interface BatUnitFieldHandlerInterface {
-	public function getFieldType();
+  public function getFieldType();
 
-	public function getFieldInfo();
+  public function getFieldInfo();
 }
 
 abstract class BatUnitFieldHandlerBase implements BatUnitFieldHandlerInterface {
-	protected $unit;
+  protected $unit;
 
-	public function __construct(BatUnit $unit) {
-		$this->unit = $unit;
-	}
+  public function __construct(BatUnit $unit) {
+    $this->unit = $unit;
+  }
 }

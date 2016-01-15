@@ -12,7 +12,7 @@ function bat_api_default_services_endpoint() {
   $endpoint->api_version = 3;
   $endpoint->name = 'bat_api';
   $endpoint->server = 'rest_server';
-  $endpoint->path = 'bat/v1';
+  $endpoint->path = 'bat/v2';
   $endpoint->authentication = array(
     'services' => 'services',
   );
@@ -36,6 +36,23 @@ function bat_api_default_services_endpoint() {
     ),
   );
   $endpoint->resources = array(
+    'events' => array(
+      'operations' => array(
+        'index' => array(
+          'enabled' => '1',
+        ),
+        'update' => array(
+          'enabled' => '1',
+        ),
+      ),
+    ),
+    'events-calendar' => array(
+      'operations' => array(
+        'index' => array(
+          'enabled' => '1',
+        ),
+      ),
+    ),
     'units' => array(
       'operations' => array(
         'index' => array(
@@ -51,34 +68,9 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
-    'availability' => array(
+    'units-calendar' => array(
       'operations' => array(
         'index' => array(
-          'enabled' => '1',
-        ),
-        'update' => array(
-          'enabled' => '1',
-        ),
-      ),
-    ),
-    'pricing' => array(
-      'operations' => array(
-        'index' => array(
-          'enabled' => '1',
-        ),
-        'update' => array(
-          'enabled' => '1',
-        ),
-      ),
-    ),
-    'booking' => array(
-      'operations' => array(
-        'index' => array(
-          'enabled' => '1',
-        ),
-      ),
-      'actions' => array(
-        'add' => array(
           'enabled' => '1',
         ),
       ),
@@ -87,6 +79,11 @@ function bat_api_default_services_endpoint() {
       'actions' => array(
         'login' => array(
           'enabled' => '1',
+          'settings' => array(
+            'services' => array(
+              'resource_api_version' => '1.0',
+            ),
+          ),
         ),
         'logout' => array(
           'enabled' => '1',
@@ -95,6 +92,9 @@ function bat_api_default_services_endpoint() {
               'resource_api_version' => '1.0',
             ),
           ),
+        ),
+        'token' => array(
+          'enabled' => '1',
         ),
       ),
     ),
