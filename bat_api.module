@@ -518,7 +518,7 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
   $events_json = array();
 
   foreach ($types as $type) {
-    $state_store = new DrupalDBStore($type, DrupalDBStore::BAT_STATE);
+    $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT);
 
     $start_date_object = new DateTime($start_date);
     $end_date_object = new DateTime($end_date);
@@ -545,10 +545,11 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
     }
 
     if (!empty($units)) {
-      $rc = new Calendar($units, $state_store);
-      $events = $rc->getEvents($start_date_object, $end_date_object);
+      $event_calendar = new Calendar($units, $event_store);
+      $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
       // @TODO - this is an undeclared dependency of bat_event_ui
+      $bat_event_type = bat_event_type_load($type);
       if ($bat_event_type->fixed_event_states) {
         $event_formatter = new FullCalendarFixedStateEventFormatter($type);
       }
@@ -556,9 +557,13 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
         $event_formatter = new FullCalendarOpenStateEventFormatter($type);
       }
 
-      foreach ($events as $unit_id => $unit_events) {
+      foreach ($event_ids as $unit_id => $unit_events) {
         foreach ($unit_events as $event) {
-          $events_json[$type][$unit_id][] = $event->toJson($event_formatter);
+          $events_json[] = array(
+            'id' => (string)$key . $unit_id,
+            'bat_id' => $event->getValue(),
+            'resourceId' => 'S' . $unit_id,
+          ) + $event->toJson($event_formatter);
         }
       }
     }
