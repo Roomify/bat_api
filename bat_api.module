@@ -688,6 +688,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->start_date = (isset($bat_event_data['start_date'])) ? $bat_event_data['start_date'] : $event->start_date;
     $event->end_date = (isset($bat_event_data['end_date'])) ? $bat_event_data['end_date'] : $event->end_date;
     $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : $event->uid;
+    $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : $event->data;
     $event->changed = REQUEST_TIME;
 
     // Set new unit_id if present.
@@ -721,6 +722,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->start_date = $bat_event_data['start_date'];
     $event->end_date = $bat_event_data['end_date'];
     $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : 0;
+    $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : NULL;
     $event->changed = REQUEST_TIME;
 
     // Set new unit_id if present.
