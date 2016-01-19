@@ -8,8 +8,8 @@ use Roomify\Bat\Event\Event;
 use Roomify\Bat\Calendar\Calendar;
 use Roomify\Bat\Store\DrupalDBStore;
 use Roomify\Bat\Unit\Unit;
-use Drupal\bat_event_ui\FullCalendarOpenStateEventFormatter;
-use Drupal\bat_event_ui\FullCalendarFixedStateEventFormatter;
+use Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter;
+use Drupal\bat_fullcalendar\FullCalendarFixedStateEventFormatter;
 
 /**
  * Implements hook_ctools_plugin_api().
