@@ -319,6 +319,14 @@ function bat_api_services_resources() {
             'source'       => array('param' => 'event_types'),
             'optional'     => FALSE,
           ),
+          array(
+            'name'         => 'background',
+            'type'         => 'boolean',
+            'description'  => t('Background'),
+            'source'       => array('param' => 'background'),
+            'optional'     => TRUE,
+            'default value' => TRUE,
+          ),
         ),
       ),
     ),
@@ -585,7 +593,7 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
  * @param $end_date
  * @param $event_types
  */
-function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
+function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types, $background) {
   $unit_types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
 
   if ($event_types == 'all') {
@@ -650,10 +658,10 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
 
       // @TODO - this is an undeclared dependency of bat_event_ui
       if ($bat_event_type->fixed_event_states) {
-        $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type);
+        $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type, $background);
       }
       else {
-        $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type);
+        $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type, $background);
       }
 
       foreach ($event_ids as $unit_id => $unit_events) {
