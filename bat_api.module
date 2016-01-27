@@ -69,6 +69,10 @@ function bat_api_permission() {
       'title' => t('Access events calendar index service'),
       'description' => t('Access events calendar index service.'),
     ),
+    'access edit event service' =>  array(
+      'title' => t('Access edit event service'),
+      'description' => t('Access edit event service.'),
+    ),
   );
 }
 
@@ -187,6 +191,13 @@ function bat_api_services_resources() {
             'default value' => '',
             'description'  => t('IDs'),
             'source'       => array('param' => 'ids'),
+          ),
+          array(
+            'name'         => 'event_type',
+            'type'         => 'string',
+            'description'  => t('Event Type'),
+            'source'       => array('param' => 'event_type'),
+            'optional'     => TRUE,
           ),
           array(
             'name'         => 'offset',
@@ -340,10 +351,11 @@ function bat_api_services_resources() {
  *
  * @param $unit_types
  * @param $unit_ids
+ * @param $event_type
  * @param $offset
  * @param $limit
  */
-function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, $limit) {
+function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_type, $offset, $limit) {
   $ids = array_filter(explode(',', $unit_ids));
   $types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
 
@@ -363,10 +375,18 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $offset, 
 
   $childrens = array();
 
+  $create_event_access = FALSE;
+
+  if (bat_event_access('create', bat_event_create(array('type' => $event_type)))) {
+    $create_event_access = TRUE;
+  }
+
   foreach ($bat_units as $unit) {
+
     $childrens[$unit->type_id][] = array(
       'id' => 'S' . $unit->unit_id,
       'title' => $unit->name,
+      'create_event' => $create_event_access,
     );
   }
 
