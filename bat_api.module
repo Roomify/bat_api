@@ -228,18 +228,25 @@ function bat_api_services_resources() {
         'access arguments' => array('access events index service'),
         'args'     => array(
           array(
-            'name'         => 'unit_ids',
+            'name'         => 'target_ids',
             'type'         => 'string',
-            'description'  => t('Unit IDs'),
-            'source'       => array('param' => 'unit_ids'),
+            'description'  => t('Targe Entity IDs'),
+            'source'       => array('param' => 'target_ids'),
             'optional'     => FALSE,
           ),
           array(
-            'name'         => 'unit_types',
+            'name'         => 'target_types',
             'type'         => 'string',
-            'description'  => t('Unit Types'),
-            'source'       => array('param' => 'unit_types'),
+            'description'  => t('Target Types'),
+            'source'       => array('param' => 'target_types'),
             'optional'     => TRUE,
+          ),
+          array(
+            'name'         => 'target_entity_type',
+            'type'         => 'string',
+            'description'  => t('Target Entity Type'),
+            'source'       => array('param' => 'target_entity_type'),
+            'optional'     => FALSE,
           ),
           array(
             'name'         => 'start_date',
@@ -529,17 +536,18 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
 /**
  * Retrieve a list of events.
  *
- * @param $unit_ids
- * @param $unit_types
+ * @param $target_ids
+ * @param $target_types
+ * @param $target_entity_type
  * @param $start_date
  * @param $end_date
  * @param $event_types
  */
-function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end_date, $event_types) {
+function bat_api_services_events_index($target_ids, $target_types, $target_entity_type, $start_date, $end_date, $event_types) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $unit_types = array_filter(explode(',', $unit_types));
+  $target_types = array_filter(explode(',', $target_types));
 
   $types = array_filter(explode(',', $event_types));
 
@@ -561,12 +569,12 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
       $start_date_object = $today;
     }
 
-    $ids = explode(',', $unit_ids);
+    $ids = explode(',', $target_ids);
 
     $units = array();
     foreach ($ids as $id) {
-      if ($bat_unit = bat_unit_load($id)) {
-        if (in_array($bat_unit->type, $unit_types) || empty($unit_types)) {
+      if ($target_entity = entity_load_single($target_entity_type, $id)) {
+        if (in_array($target_entity->type, $target_types) || empty($target_types)) {
           // Setting the default value to 0 since we are dealing with the events array
           // so getting event IDs.
           $units[] = new Unit($id, 0);
@@ -592,7 +600,7 @@ function bat_api_services_events_index($unit_ids, $unit_types, $start_date, $end
           $events_json[] = array(
             'id' => (string)$key . $unit_id,
             'bat_id' => $event->getValue(),
-            'resourceId' => 'S' . $unit_id,
+            'resourceId' => 'S' . $target_id,
           ) + $event->toJson($event_formatter);
         }
       }
@@ -719,12 +727,15 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : $event->data;
     $event->changed = REQUEST_TIME;
 
-    // Set new unit_id if present.
-    if (isset($bat_event_data['unit_id'])) {
-      $event->event_unit_reference = array(
+    // Set new target_id if present.
+    if (isset($bat_event_data['target_id'])) {
+      $event_type = bat_event_type_load($event->type);
+      // Construct target entity reference field name using this event type's target entity type.
+      $target_field_name = 'event_' . $event_type->target_entity_type . '_reference';
+      $event->{$target_field_name} = array(
         LANGUAGE_NONE => array(
           0 => array(
-            'target_id' => $bat_event_data['unit_id'],
+            'target_id' => $bat_event_data['target_id'],
           )
         )
       );
@@ -753,12 +764,15 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : NULL;
     $event->changed = REQUEST_TIME;
 
-    // Set new unit_id if present.
-    if (isset($bat_event_data['unit_id'])) {
-      $event->event_unit_reference = array(
+    // Set new target_id if present.
+    if (isset($bat_event_data['target_id'])) {
+      $event_type = bat_event_type_load($event->type);
+      // Construct target entity reference field name using this event type's target entity type.
+      $target_field_name = 'event_' . $event_type->target_entity_type . '_reference';
+      $event->{$target_field_name} = array(
         LANGUAGE_NONE => array(
           0 => array(
-            'target_id' => $bat_event_data['unit_id'],
+            'target_id' => $bat_event_data['target_id'],
           )
         )
       );
