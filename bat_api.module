@@ -719,12 +719,15 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : $event->data;
     $event->changed = REQUEST_TIME;
 
-    // Set new unit_id if present.
-    if (isset($bat_event_data['unit_id'])) {
-      $event->event_unit_reference = array(
+    // Set new target_id if present.
+    if (isset($bat_event_data['target_id'])) {
+      $event_type = bat_event_type_load($event->type);
+      // Construct target entity reference field name using this event type's target entity type.
+      $target_field_name = 'event_' . $event_type->target_entity_type . '_reference';
+      $event->{$target_field_name} = array(
         LANGUAGE_NONE => array(
           0 => array(
-            'target_id' => $bat_event_data['unit_id'],
+            'target_id' => $bat_event_data['target_id'],
           )
         )
       );
@@ -753,12 +756,15 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : NULL;
     $event->changed = REQUEST_TIME;
 
-    // Set new unit_id if present.
-    if (isset($bat_event_data['unit_id'])) {
-      $event->event_unit_reference = array(
+    // Set new target_id if present.
+    if (isset($bat_event_data['target_id'])) {
+      $event_type = bat_event_type_load($event->type);
+      // Construct target entity reference field name using this event type's target entity type.
+      $target_field_name = 'event_' . $event_type->target_entity_type . '_reference';
+      $event->{$target_field_name} = array(
         LANGUAGE_NONE => array(
           0 => array(
-            'target_id' => $bat_event_data['unit_id'],
+            'target_id' => $bat_event_data['target_id'],
           )
         )
       );
