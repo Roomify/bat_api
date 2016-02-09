@@ -363,48 +363,54 @@ function bat_api_services_resources() {
  * @param $limit
  */
 function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_type, $offset, $limit) {
-  $ids = array_filter(explode(',', $unit_ids));
-  $types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
-
-  $query = db_select('bat_units', 'n')
-            ->fields('n', array('unit_id', 'type_id', 'type', 'name'));
-  if (!empty($ids)) {
-    $query->condition('unit_id', $ids, 'IN');
-  }
-  if (!empty($types)) {
-    $query->condition('type_id', $types, 'IN');
-  }
-  $query->orderBy('type');
-  $query->range($offset, $limit);
-  $bat_units = $query->execute()->fetchAll();
-
-  $units = array();
-
-  $childrens = array();
-
   $create_event_access = FALSE;
 
   if (bat_event_access('create', bat_event_create(array('type' => $event_type)))) {
     $create_event_access = TRUE;
   }
 
-  foreach ($bat_units as $unit) {
+  $ids = array_filter(explode(',', $unit_ids));
 
-    $childrens[$unit->type_id][] = array(
-      'id' => 'S' . $unit->unit_id,
-      'title' => $unit->name,
-      'create_event' => $create_event_access,
-    );
+  if ($unit_types == 'all') {
+    $types = array();
+    foreach (bat_unit_get_types() as $type => $info) {
+      $types[] = $type;
+    }
+  }
+  else {
+    $types = array_filter(explode(',', $unit_types));
   }
 
-  foreach ($childrens as $type_id => $children) {
-    $unit_type = bat_type_load($type_id);
+  $bat_event_type = bat_event_type_load($event_type);
 
-    $units[] = array(
-      'id' => $unit_type->type_id,
-      'title' => $unit_type->name,
-      'children' => $children,
-    );
+  $target_entity_type = $bat_event_type->target_entity_type;
+
+  $controller = entity_get_controller($target_entity_type);
+
+  $units = array();
+
+  foreach ($types as $type) {
+    $entities = $controller->getReferencedIds($type, $unit_ids);
+
+    $childrens = array();
+
+    foreach ($entities as $entity) {
+      $childrens[$entity['type_id']][] = array(
+        'id' => 'S' . $entity['id'],
+        'title' => $entity['name'],
+        'create_event' => $create_event_access,
+      );
+    }
+
+    foreach ($childrens as $type_id => $children) {
+      $unit_type = bat_type_load($type_id);
+
+      $units[] = array(
+        'id' => $unit_type->type_id,
+        'title' => $unit_type->name,
+        'children' => $children,
+      );
+    }
   }
 
   return $units;
@@ -622,7 +628,15 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
  * @param $event_types
  */
 function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types, $background) {
-  $unit_types = ($unit_types == 'all') ? array() : array_filter(explode(',', $unit_types));
+  if ($unit_types == 'all') {
+    $unit_types = array();
+    foreach (bat_unit_get_types() as $type => $info) {
+      $unit_types[] = $type;
+    }
+  }
+  else {
+    $unit_types = array_filter(explode(',', $unit_types));
+  }
 
   if ($event_types == 'all') {
     $types = array();
@@ -639,6 +653,10 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
   foreach ($types as $type) {
     // Get the event type definition from Drupal
     $bat_event_type = bat_event_type_load($type);
+
+    $target_entity_type = $bat_event_type->target_entity_type;
+
+    $controller = entity_get_controller($target_entity_type);
 
     // For each type of event create a state store and an event store
     $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT);
@@ -657,48 +675,40 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
 
     $ids = array_filter(explode(',', $unit_ids));
 
-    // Get all units for a given type
-    $query = db_select('bat_units', 'n')
-            ->fields('n', array('unit_id', 'type', 'name'));
-    // and optionally limit to specific ids if defined in API call
-    if (!empty($ids)) {
-      $query->condition('unit_id', $ids, 'IN');
-    }
-    // and types
-    if (!empty($unit_types)) {
-      $query->condition('type_id', $unit_types, 'IN');
-    }
-    $query->orderBy('unit_id');
-    $bat_units = $query->execute()->fetchAll();
+    foreach ($unit_types as $unit_type) {
+      $entities = $controller->getReferencedIds($unit_type, $unit_ids);
 
-    // Create an array of unit objects - the default value is set to 0 since we want
-    // to know if the value in the database is actually 0. This will allow us to identify
-    // which events are represented by events in the database (i.e. have a value different to 0)
-    $units = array();
-    foreach ($bat_units as $unit) {
-      $units[] = new Unit($unit->unit_id, 0);
-    }
+      $childrens = array();
 
-    if (!empty($units)) {
-      $event_calendar = new Calendar($units, $event_store);
-
-      $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
-
-      // @TODO - this is an undeclared dependency of bat_event_ui
-      if ($bat_event_type->fixed_event_states) {
-        $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type, $background);
-      }
-      else {
-        $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type, $background);
+      // Create an array of unit objects - the default value is set to 0 since we want
+      // to know if the value in the database is actually 0. This will allow us to identify
+      // which events are represented by events in the database (i.e. have a value different to 0)
+      $units = array();
+      foreach ($entities as $entity) {
+        $units[] = new Unit($entity['id'], 0);
       }
 
-      foreach ($event_ids as $unit_id => $unit_events) {
-        foreach ($unit_events as $key => $event) {
-          $events_json[] = array(
-            'id' => (string)$key . $unit_id,
-            'bat_id' => $event->getValue(),
-            'resourceId' => 'S' . $unit_id,
-          ) + $event->toJson($event_formatter);
+      if (!empty($units)) {
+        $event_calendar = new Calendar($units, $event_store);
+
+        $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
+
+        // @TODO - this is an undeclared dependency of bat_event_ui
+        if ($bat_event_type->fixed_event_states) {
+          $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type, $background);
+        }
+        else {
+          $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type, $background);
+        }
+
+        foreach ($event_ids as $unit_id => $unit_events) {
+          foreach ($unit_events as $key => $event) {
+            $events_json[] = array(
+              'id' => (string)$key . $unit_id,
+              'bat_id' => $event->getValue(),
+              'resourceId' => 'S' . $unit_id,
+            ) + $event->toJson($event_formatter);
+          }
         }
       }
     }
