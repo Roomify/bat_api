@@ -390,7 +390,7 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_ty
   $units = array();
 
   foreach ($types as $type) {
-    $entities = $controller->getReferencedIds($type, $unit_ids);
+    $entities = $controller->getReferencedIds($type, $ids);
 
     $childrens = array();
 
@@ -676,7 +676,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
     $ids = array_filter(explode(',', $unit_ids));
 
     foreach ($unit_types as $unit_type) {
-      $entities = $controller->getReferencedIds($unit_type, $unit_ids);
+      $entities = $controller->getReferencedIds($unit_type, $ids);
 
       $childrens = array();
 
