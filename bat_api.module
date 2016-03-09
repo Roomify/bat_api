@@ -566,7 +566,7 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
     $end_date_object = new DateTime($end_date);
 
     $today = new DateTime();
-    if (!user_access('view past availability information') && $today > $start_date_object) {
+    if (!user_access('view past event information') && $today > $start_date_object) {
       if ($today > $end_date_object) {
         $return->events = array();
         return $return;
