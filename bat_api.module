@@ -658,6 +658,11 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
   $events_json = array();
 
   foreach ($types as $type) {
+    // Check if user has permission to view calendar data for this event type.
+    if (!user_access('view calendar data for any ' . $type . ' event')) {
+      continue;
+    }
+
     // Get the event type definition from Drupal
     $bat_event_type = bat_event_type_load($type);
 
