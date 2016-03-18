@@ -373,8 +373,15 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_ty
 
   if ($unit_types == 'all') {
     $types = array();
-    foreach (bat_unit_get_types() as $type => $info) {
-      $types[] = $type;
+
+    foreach (bat_unit_get_types() as $type) {
+      $type_bundle = bat_type_bundle_load($type->type);
+
+      if (is_array($type_bundle->default_event_value_field_ids)) {
+        if (isset($type_bundle->default_event_value_field_ids[$event_type]) && !empty($type_bundle->default_event_value_field_ids[$event_type])) {
+          $types[] = $type->type_id;
+        }
+      }
     }
   }
   else {
