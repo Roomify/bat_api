@@ -569,7 +569,7 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
   $events_json = array();
 
   foreach ($types as $type) {
-    $prefix = $databases['default']['default']['prefix'];
+    $prefix = (isset($databases['default']['default']['prefix'])) ? $databases['default']['default']['prefix'] : '';
     $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT, $prefix);
 
     $start_date_object = new DateTime($start_date);
@@ -676,7 +676,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
     $controller = entity_get_controller($target_entity_type);
 
     // For each type of event create a state store and an event store
-    $prefix = $databases['default']['default']['prefix'];
+    $prefix = (isset($databases['default']['default']['prefix'])) ? $databases['default']['default']['prefix'] : '';
     $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT, $prefix);
 
     $start_date_object = new DateTime($start_date);
