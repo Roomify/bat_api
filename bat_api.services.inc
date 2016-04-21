@@ -53,6 +53,13 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
+    'matching-units-calendar' => array(
+      'operations' => array(
+        'index' => array(
+          'enabled' => '1',
+        ),
+      ),
+    ),
     'units' => array(
       'operations' => array(
         'index' => array(
