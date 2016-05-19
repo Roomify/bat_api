@@ -554,7 +554,7 @@ function bat_api_services_add_unit($name, $type, $status) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  if (bat_unit_type_load($type) !== FALSE && $name != '') {
+  if (bat_type_load($type) !== FALSE && $name != '') {
     $unit = bat_unit_create(
       array(
         'name' => $name,

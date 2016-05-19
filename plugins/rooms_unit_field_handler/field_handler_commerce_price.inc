@@ -16,7 +16,7 @@ class BatUnitFieldHandlerCommercePrice extends BatUnitFieldHandlerBase {
   public function getFieldInfo() {
     $price_fields = array();
 
-    $bat_unit_type = bat_unit_type_load($this->unit->type);
+    $bat_unit_type = bat_type_load($this->unit->type);
     $base_price_field = NULL;
     if (isset($bat_unit_type->data['pricing_field'])) {
       $base_price_field = $bat_unit_type->data['pricing_field'];
