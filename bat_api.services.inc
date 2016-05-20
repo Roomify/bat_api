@@ -60,6 +60,21 @@ function bat_api_default_services_endpoint() {
         ),
       ),
     ),
+    'types' => array(
+      'operations' => array(
+        'index' => array(
+          'enabled' => '1',
+        ),
+        'update' => array(
+          'enabled' => '1',
+        ),
+      ),
+      'actions' => array(
+        'add' => array(
+          'enabled' => '1',
+        ),
+      ),
+    ),
     'units' => array(
       'operations' => array(
         'index' => array(

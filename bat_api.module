@@ -45,6 +45,18 @@ function bat_api_ctools_plugin_type() {
  */
 function bat_api_permission() {
   return array(
+    'access types index service' =>  array(
+      'title' => t('Access types index service'),
+      'description' => t('Access types index service.'),
+    ),
+    'access edit type service' =>  array(
+      'title' => t('Access edit type service'),
+      'description' => t('Access edit type service.'),
+    ),
+    'access add type service' =>  array(
+      'title' => t('Access add type service'),
+      'description' => t('Access add type service.'),
+    ),
     'access units index service' =>  array(
       'title' => t('Access units index service'),
       'description' => t('Access units index service.'),
@@ -81,6 +93,100 @@ function bat_api_permission() {
  */
 function bat_api_services_resources() {
   $resources = array();
+
+  $resources['types'] = array(
+    'operations' => array(
+      'index' => array(
+        'callback' => 'bat_api_services_types_index',
+        'help' => t('Returns an object containing types information.'),
+        'access arguments' => array('access types index service'),
+        'args'     => array(
+          array(
+            'name'         => 'ids',
+            'type'         => 'string',
+            'optional'     => TRUE,
+            'default value' => '',
+            'description'  => t('IDs'),
+            'source'       => array('param' => 'ids'),
+          ),
+          array(
+            'name'         => 'offset',
+            'type'         => 'string',
+            'optional'     => TRUE,
+            'default value' => 0,
+            'description'  => t('Result offset to start listing'),
+            'source'       => array('param' => 'offset'),
+          ),
+          array(
+            'name'         => 'limit',
+            'type'         => 'string',
+            'optional'     => TRUE,
+            'default value' => 100,
+            'description'  => t('Number of items to return'),
+            'source'       => array('param' => 'limit'),
+          ),
+        ),
+      ),
+      'update' => array(
+        'callback' => 'bat_api_services_edit_type',
+        'access arguments' => array('access edit type service'),
+        'help'     => t('Edit an existing BAT Type.'),
+        'args'     => array(
+          array(
+            'name'         => 'type_id',
+            'type'         => 'integer',
+            'description'  => t('Type ID'),
+            'source'       => array('path' => 0),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'bat_type',
+            'type'         => 'array',
+            'description'  => t('The type data to update'),
+            'source'       => 'data',
+            'optional'     => FALSE,
+          ),
+        ),
+      ),
+    ),
+    'actions' => array(
+      'add' => array(
+        'callback' => 'bat_api_services_add_type',
+        'access arguments' => array('access add type service'),
+        'help'     => t('Add a new BAT Type.'),
+        'args'     => array(
+          array(
+            'name'         => 'name',
+            'type'         => 'string',
+            'description'  => t('Name'),
+            'source'       => array('data' => 'name'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'type',
+            'type'         => 'string',
+            'description'  => t('Type'),
+            'source'       => array('data' => 'type'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'uid',
+            'type'         => 'integer',
+            'description'  => t('UID'),
+            'source'       => array('data' => 'uid'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'status',
+            'type'         => 'integer',
+            'description'  => t('Status'),
+            'source'       => array('data' => 'status'),
+            'optional'     => FALSE,
+          ),
+        ),
+      ),
+    ),
+  );
 
   $resources['units'] = array(
     'operations' => array(
@@ -174,7 +280,7 @@ function bat_api_services_resources() {
           array(
             'name'         => 'status',
             'type'         => 'integer',
-            'description'  => t('Published'),
+            'description'  => t('Status'),
             'source'       => array('data' => 'status'),
             'optional'     => FALSE,
           ),
@@ -1044,4 +1150,126 @@ function bat_api_services_matching_units_calendar($unit_types, $start_date, $end
   $events_json = _bat_api_merge_non_blocking_events($events_json);
 
   return array_values($events_json);
+}
+
+/**
+ * Retrieve a list of types.
+ *
+ * @param $type_ids
+ * @param $offset
+ * @param $limit
+ */
+function bat_api_services_types_index($type_ids, $offset, $limit) {
+  $return = new stdClass();
+  $return->sessid = session_id();
+
+  ctools_include('plugins');
+  $field_handlers = ctools_get_plugins('bat_api', 'bat_unit_field_handler');
+
+  $ids = array_filter(explode(',', $type_ids));
+
+  $query = db_select('bat_types', 'n')
+            ->fields('n', array('type_id', 'type', 'name', 'language', 'status', 'uid'));
+  if (!empty($ids)) {
+    $query->condition('type_id', $ids, 'IN');
+  }
+  $query->orderBy('type_id');
+  $query->range($offset, $limit);
+  $bat_types = $query->execute()->fetchAll();
+
+  $types = array();
+  foreach ($bat_types as $type) {
+    $types[$type->type_id] = array(
+      'properties' => array(
+        'name' => $type->name,
+        'type' => $type->type,
+        'language' => $type->language,
+        'status' => $type->status,
+        'uid' => $type->uid,
+      ),
+      'fields' => array(
+      ),
+    );
+
+    foreach ($field_handlers as $handler) {
+      $class = ctools_plugin_get_class($handler, 'handler');
+      $object_handler = new $class(bat_type_load($type->type_id));
+
+      $field_type = $object_handler->getFieldType();
+      $field_info = $object_handler->getFieldInfo();
+
+      if (!empty($field_info)) {
+        $types[$type->type_id]['fields'][$field_type] = $field_info;
+      }
+    }
+  }
+
+  $return->types = $types;
+
+  return $return;
+}
+
+/**
+ * Update an existing type.
+ *
+ * @param $type_id
+ * @param $bat_type_data
+ */
+function bat_api_services_edit_type($type_id, $bat_type_data) {
+  $return = new stdClass();
+  $return->sessid = session_id();
+
+  if ($type = bat_type_load($type_id)) {
+    $type->name = (isset($bat_type_data['name'])) ? $bat_type_data['name'] : $type->name;
+    $type->status = (isset($bat_type_data['status'])) ? $bat_type_data['status'] : $type->status;
+    $type->uid = (isset($bat_type_data['uid'])) ? $bat_type_data['uid'] : $type->uid;
+    $type->data = (isset($bat_type_data['data'])) ? $bat_type_data['data'] : $type->data;
+
+    $type->changed = REQUEST_TIME;
+
+    bat_type_save($type);
+
+    $return->status = 1;
+  }
+  else {
+    $return->status = 0;
+  }
+
+  return $return;
+}
+
+/**
+ * Create a new type.
+ *
+ * @param $name
+ * @param $type
+ * @param $uid
+ * @param $status
+ */
+function bat_api_services_add_type($name, $type, $uid, $status) {
+  $return = new stdClass();
+  $return->sessid = session_id();
+
+  if (bat_type_bundle_load($type) !== FALSE && $name != '') {
+    $bat_type = bat_type_create(
+      array(
+        'name' => $name,
+        'type' => $type,
+        'status' => $status,
+        'uid' => $uid,
+        'created' => REQUEST_TIME,
+        'changed' => REQUEST_TIME,
+      )
+    );
+
+    bat_type_save($bat_type);
+
+    $return->type_id = $bat_type->type_id;
+    $return->status = 1;
+  }
+  else {
+    $return->status = 0;
+  }
+
+  return $return;
 }
