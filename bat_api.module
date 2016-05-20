@@ -681,21 +681,20 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
       $event_calendar = new Calendar($units, $event_store);
       $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
-      // @TODO - this is an undeclared dependency of bat_event_ui
       $bat_event_type = bat_event_type_load($type);
       if ($bat_event_type->fixed_event_states) {
-        $event_formatter = new FullCalendarFixedStateEventFormatter($type);
+        $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type);
       }
       else {
-        $event_formatter = new FullCalendarOpenStateEventFormatter($type);
+        $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type);
       }
 
       foreach ($event_ids as $unit_id => $unit_events) {
-        foreach ($unit_events as $event) {
+        foreach ($unit_events as $key => $event) {
           $events_json[] = array(
             'id' => (string)$key . $unit_id,
             'bat_id' => $event->getValue(),
-            'resourceId' => 'S' . $target_id,
+            'resourceId' => 'S' . $unit_id,
           ) + $event->toJson($event_formatter);
         }
       }
@@ -832,6 +831,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->end_date = (isset($bat_event_data['end_date'])) ? $bat_event_data['end_date'] : $event->end_date;
     $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : $event->uid;
     $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : $event->data;
+
     $event->changed = REQUEST_TIME;
 
     // Set new target_id if present.
@@ -860,6 +860,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     }
 
     $event->save();
+
     $return->status = 1;
   }
   elseif ($event_id == 'undefined') {
@@ -869,6 +870,8 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     $event->end_date = $bat_event_data['end_date'];
     $event->uid = (isset($bat_event_data['uid'])) ? $bat_event_data['uid'] : 0;
     $event->data = (isset($bat_event_data['data'])) ? $bat_event_data['data'] : NULL;
+
+    $event->created = REQUEST_TIME;
     $event->changed = REQUEST_TIME;
 
     // Set new target_id if present.
@@ -897,6 +900,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
     }
 
     $event->save();
+
     $return->status = 1;
   }
 
