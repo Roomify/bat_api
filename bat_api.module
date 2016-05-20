@@ -128,11 +128,11 @@ function bat_api_services_resources() {
             'optional'     => FALSE,
           ),
           array(
-            'name' => 'bat_unit',
-            'type' => 'array',
-            'description' => t('The unit data to update'),
-            'source' => 'data',
-            'optional' => FALSE,
+            'name'         => 'bat_unit',
+            'type'         => 'array',
+            'description'  => t('The unit data to update'),
+            'source'       => 'data',
+            'optional'     => FALSE,
           ),
         ),
       ),
@@ -155,6 +155,20 @@ function bat_api_services_resources() {
             'type'         => 'string',
             'description'  => t('Type'),
             'source'       => array('data' => 'type'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'type_id',
+            'type'         => 'integer',
+            'description'  => t('Type ID'),
+            'source'       => array('data' => 'type_id'),
+            'optional'     => FALSE,
+          ),
+          array(
+            'name'         => 'uid',
+            'type'         => 'integer',
+            'description'  => t('UID'),
+            'source'       => array('data' => 'uid'),
             'optional'     => FALSE,
           ),
           array(
@@ -503,7 +517,7 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $ids = array_filter(explode(',', $unit_ids));
 
   $query = db_select('bat_units', 'n')
-            ->fields('n', array('unit_id', 'type', 'name', 'language', 'status', 'uid'));
+            ->fields('n', array('unit_id', 'type', 'type_id', 'name', 'language', 'status', 'uid'));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
@@ -515,8 +529,9 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
   foreach ($bat_units as $unit) {
     $units[$unit->unit_id] = array(
       'properties' => array(
-        'type' => $unit->type,
         'name' => $unit->name,
+        'type' => $unit->type,
+        'type_id' => $unit->type_id,
         'language' => $unit->language,
         'status' => $unit->status,
         'uid' => $unit->uid,
@@ -548,19 +563,22 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
  *
  * @param $name
  * @param $type
+ * @param $type_id
+ * @param $uid
  * @param $status
  */
-function bat_api_services_add_unit($name, $type, $status) {
+function bat_api_services_add_unit($name, $type, $type_id, $uid, $status) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  if (bat_type_load($type) !== FALSE && $name != '') {
+  if (bat_unit_bundle_load($type) !== FALSE && bat_type_load($type_id) !== FALSE && $name != '') {
     $unit = bat_unit_create(
       array(
         'name' => $name,
         'type' => $type,
+        'type_id' => $type_id,
         'status' => $status,
-        'uid' => 0,
+        'uid' => $uid,
         'created' => REQUEST_TIME,
         'changed' => REQUEST_TIME,
       )
@@ -588,13 +606,11 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   $return = new stdClass();
   $return->sessid = session_id();
 
-  $unit = bat_unit_load($unit_id);
-
-  if ($unit !== FALSE) {
+  if ($unit = bat_unit_load($unit_id)) {
     $unit->name = (isset($bat_unit_data['name'])) ? $bat_unit_data['name'] : $unit->name;
-    $unit->default_state = (isset($bat_unit_data['default_state'])) ? $bat_unit_data['default_state'] : $unit->default_state;
     $unit->status = (isset($bat_unit_data['status'])) ? $bat_unit_data['status'] : $unit->status;
     $unit->uid = (isset($bat_unit_data['uid'])) ? $bat_unit_data['uid'] : $unit->uid;
+    $unit->data = (isset($bat_unit_data['data'])) ? $bat_unit_data['data'] : $unit->data;
 
     $unit->changed = REQUEST_TIME;
 
