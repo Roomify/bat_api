@@ -27,6 +27,10 @@ function bat_api_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'bat_api' && $plugin_type == 'bat_unit_field_handler') {
     return 'plugins/bat_unit_field_handler';
   }
+
+  if ($owner == 'bat_api' && $plugin_type == 'bat_type_field_handler') {
+    return 'plugins/bat_type_field_handler';
+  }
 }
 
 /**
@@ -35,6 +39,9 @@ function bat_api_ctools_plugin_directory($owner, $plugin_type) {
 function bat_api_ctools_plugin_type() {
   return array(
     'bat_unit_field_handler' => array(
+      'use hooks' => TRUE,
+    ),
+    'bat_type_field_handler' => array(
       'use hooks' => TRUE,
     ),
   );
@@ -1164,7 +1171,7 @@ function bat_api_services_types_index($type_ids, $offset, $limit) {
   $return->sessid = session_id();
 
   ctools_include('plugins');
-  $field_handlers = ctools_get_plugins('bat_api', 'bat_unit_field_handler');
+  $field_handlers = ctools_get_plugins('bat_api', 'bat_type_field_handler');
 
   $ids = array_filter(explode(',', $type_ids));
 

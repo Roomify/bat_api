@@ -9,3 +9,4 @@ dependencies[] = rest_server
 dependencies[] = services
 
 files[] = includes/bat_api.bat_unit_field_handler.inc
+files[] = includes/bat_api.bat_type_field_handler.inc
