@@ -80,6 +80,10 @@ function bat_api_permission() {
       'title' => t('Access units calendar index service'),
       'description' => t('Access units calendar index service.'),
     ),
+    'access matching units calendar index service' =>  array(
+      'title' => t('Access matching units calendar index service'),
+      'description' => t('Access matching units calendar index service.'),
+    ),
     'access events index service' =>  array(
       'title' => t('Access events index service'),
       'description' => t('Access events index service.'),
@@ -490,7 +494,7 @@ function bat_api_services_resources() {
       'index' => array(
         'callback' => 'bat_api_services_matching_units_calendar',
         'help' => t('Returns an object containing events information.'),
-        'access arguments' => array('access events calendar index service'),
+        'access arguments' => array('access matching units calendar index service'),
         'args'     => array(
           array(
             'name'         => 'unit_types',
