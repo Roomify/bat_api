@@ -30,7 +30,6 @@ use Drupal\bat_fullcalendar\FullCalendarFixedStateEventFormatter;
  *   translatable = true,
  *   deriver = "\Drupal\bat_api\Plugin\Deriver\EventsIndex"
  * )
- *
  */
 class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPluginInterface {
 
@@ -77,12 +76,19 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    */
-  public function processRequest(Request $request, RouteMatchInterface $route_match, SerializerInterface $serializer) {
-    $unit_types = 'all';
-    $event_types = 'all';
+  public function getCacheMaxAge() {
+    return 0;
+  }
 
-    $start_date = '01-01-2016';
-    $end_date = '01-01-2017';
+  /**
+   * {@inheritdoc}
+   */
+  public function processRequest(Request $request, RouteMatchInterface $route_match, SerializerInterface $serializer) {
+    $unit_types = $request->query->get('unit_types');
+    $event_types = $request->query->get('event_types');
+
+    $start_date = $request->query->get('start');
+    $end_date = $request->query->get('end');
 
     if ($unit_types == 'all') {
       $unit_types = array();
@@ -117,8 +123,6 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
 
       $target_entity_type = $bat_event_type->target_entity_type;
 
-      //$controller = entity_get_controller($target_entity_type);
-
       // For each type of event create a state store and an event store
       $prefix = (isset($databases['default']['default']['prefix'])) ? $databases['default']['default']['prefix'] : '';
       $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT, $prefix);
@@ -138,7 +142,6 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
       $ids = array_filter(explode(',', $unit_ids));
 
       foreach ($unit_types as $unit_type) {
-        //$entities = $controller->getReferencedIds($unit_type, $ids);
         $entities = $this->getReferencedIds($unit_type, $ids);
 
         $childrens = array();
@@ -156,12 +159,12 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
 
           $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
-          //if ($bat_event_type->getFixedEventStates()) {
+          if ($bat_event_type->getFixedEventStates()) {
             $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type, $background);
-          /*}
+          }
           else {
             $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type, $background);
-          }*/
+          }
 
           foreach ($event_ids as $unit_id => $unit_events) {
             foreach ($unit_events as $key => $event) {

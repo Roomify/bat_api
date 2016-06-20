@@ -25,7 +25,6 @@ use Drupal\bat_unit\Entity\TypeBundle;
  *   translatable = true,
  *   deriver = "\Drupal\bat_api\Plugin\Deriver\UnitIndex"
  * )
- *
  */
 class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginInterface {
 
@@ -72,13 +71,20 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
+  public function getCacheMaxAge() {
+    return 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function processRequest(Request $request, RouteMatchInterface $route_match, SerializerInterface $serializer) {
-    $event_type = 'availability';
-    $unit_types = 'all';
+    $event_type = $request->query->get('event_type');
+    $unit_types = $request->query->get('types');
+
     $return_children = TRUE;
 
     $create_event_access = FALSE;
-
     if (bat_event_access('create', bat_event_create(array('type' => $event_type)))) {
       $create_event_access = TRUE;
     }
@@ -89,11 +95,12 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
       $types = array();
 
       foreach (bat_unit_get_types() as $type) {
-        $type_bundle = TypeBundle::load($type->bundle());
+        $type_bundle = bat_type_bundle_load($type->bundle());
 
-        //if (!empty($type_bundle->default_event_value_field_ids)) {
+        if (isset($type_bundle->default_event_value_field_ids[$event_type]) &&
+            !empty($type_bundle->default_event_value_field_ids[$event_type])) {
           $types[] = $type->id();
-        //}
+        }
       }
     }
     else {
@@ -104,12 +111,9 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
 
     $target_entity_type = $bat_event_type->target_entity_type;
 
-    //$controller = entity_get_controller($target_entity_type);
-
     $units = array();
 
     foreach ($types as $type) {
-      //$entities = $controller->getReferencedIds($type, $ids);
       $entities = $this->getReferencedIds($type, $ids);
 
       $childrens = array();

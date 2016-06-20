@@ -26,9 +26,9 @@ class UnitIndex extends DeriverBase implements ContainerDeriverInterface {
     $entity_type_id = 'calendar-units';
 
     $this->derivatives[$entity_type_id] = $base_plugin_definition;
-    $this->derivatives[$entity_type_id]['title'] = t('@label: Index nicola', ['@label' => 'Calendar units']);
-    $this->derivatives[$entity_type_id]['description'] = t('Index of @entity_type_id objects.', ['@entity_type_id' => $entity_type_id]);
-    $this->derivatives[$entity_type_id]['category'] = t('@label', ['@label' => 'Calendar units']);
+    $this->derivatives[$entity_type_id]['title'] = t('Calendar units');
+    $this->derivatives[$entity_type_id]['description'] = t('Index of units objects.');
+    $this->derivatives[$entity_type_id]['category'] = t('Calendar units');
     $this->derivatives[$entity_type_id]['path'] = "$entity_type_id";
 
     return $this->derivatives;
