@@ -86,6 +86,8 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
   public function processRequest(Request $request, RouteMatchInterface $route_match, SerializerInterface $serializer) {
     $unit_types = $request->query->get('unit_types');
     $event_types = $request->query->get('event_types');
+    $background = $request->query->get('background');
+    $unit_ids = $request->query->get('unit_ids');
 
     $start_date = $request->query->get('start');
     $end_date = $request->query->get('end');

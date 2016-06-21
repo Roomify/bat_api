@@ -85,7 +85,7 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
     $return_children = TRUE;
 
     $create_event_access = FALSE;
-    if (bat_event_access('create', bat_event_create(array('type' => $event_type)))) {
+    if (bat_event_access(bat_event_create2(array('type' => $event_type)), 'create', \Drupal::currentUser())) {
       $create_event_access = TRUE;
     }
 
