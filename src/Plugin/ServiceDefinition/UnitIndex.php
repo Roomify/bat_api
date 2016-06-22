@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\bat_unit\Entity\TypeBundle;
 
 /**
@@ -85,7 +86,7 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
     $return_children = TRUE;
 
     $create_event_access = FALSE;
-    if (bat_event_access(bat_event_create2(array('type' => $event_type)), 'create', \Drupal::currentUser())) {
+    if (bat_event_access(bat_event_create2(array('type' => $event_type)), 'create', \Drupal::currentUser()) == AccessResult::allowed()) {
       $create_event_access = TRUE;
     }
 

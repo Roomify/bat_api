@@ -1,12 +1,13 @@
-uuid: 129c489d-2746-4f73-8a00-b5a95f6e1ab2
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: WZbAUfLEza2a6pmLTvWFp8syuYjkdqLIDg3c9Pvt9YA
+  default_config_hash: QkKAtBvm2PHW7oGbO8C-kN_wSU3KGNPQvRRtWLmVhiI
 id: bat_api
 label: 'Bat api'
 service_providers:
+  'events_index:calendar-events': 'events_index:calendar-events'
+  'unit_index:calendar-units': 'unit_index:calendar-units'
   'entity_delete:property': 'entity_delete:property'
   'entity_delete:property_type': 'entity_delete:property_type'
   'entity_delete:event': 'entity_delete:event'
