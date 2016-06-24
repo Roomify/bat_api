@@ -1,2 +1,32 @@
 <?php
 
+/**
+ * Merge non blocking events so that we display them as a continuous single event.
+ *
+ * @param $events array
+ *
+ * @return array
+ */
+function bat_api_merge_non_blocking_events($events) {
+  $prev_id = FALSE;
+
+  foreach ($events as $id => $event) {
+    if ($prev_id !== FALSE && isset($event['rendering']) && $event['rendering'] == 'background' && !$event['blocking']) {
+      $last_event = $events[$prev_id];
+      if (isset($last_event['rendering']) && $last_event['rendering'] == 'background' && !$last_event['blocking']) {
+        if ($last_event['resourceId'] == $event['resourceId'] &&
+            $last_event['title'] == $event['title'] &&
+            $last_event['color'] == $event['color']) {
+          $events[$prev_id]['end'] = $event['end'];
+
+          unset($events[$id]);
+          continue;
+        }
+      }
+    }
+
+    $prev_id = $id;
+  }
+
+  return $events;
+}

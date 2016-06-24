@@ -82,11 +82,12 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
   public function processRequest(Request $request, RouteMatchInterface $route_match, SerializerInterface $serializer) {
     $event_type = $request->query->get('event_type');
     $unit_types = $request->query->get('types');
+    $unit_ids = $request->query->get('ids');
 
     $return_children = TRUE;
 
     $create_event_access = FALSE;
-    if (bat_event_access(bat_event_create2(array('type' => $event_type)), 'create', \Drupal::currentUser()) == AccessResult::allowed()) {
+    if (bat_event_access(bat_event_create(array('type' => $event_type)), 'create', \Drupal::currentUser()) == AccessResult::allowed()) {
       $create_event_access = TRUE;
     }
 
