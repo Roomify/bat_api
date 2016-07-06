@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\bat_api\Plugin\Deriver\EventsIndex.php
+ * Contains \Drupal\bat_api\Plugin\Deriver\CalendarEventsIndex.php
  */
 
 namespace Drupal\bat_api\Plugin\Deriver;
@@ -10,7 +10,7 @@ use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class EventsIndex extends DeriverBase implements ContainerDeriverInterface {
+class CalendarEventsIndex extends DeriverBase implements ContainerDeriverInterface {
 
   /**
    * {@inheritdoc}
@@ -23,12 +23,12 @@ class EventsIndex extends DeriverBase implements ContainerDeriverInterface {
   }
 
   public function getDerivativeDefinitions($base_plugin_definition) {
-    $entity_type_id = 'events';
+    $entity_type_id = 'calendar-events';
 
     $this->derivatives[$entity_type_id] = $base_plugin_definition;
-    $this->derivatives[$entity_type_id]['title'] = t('Events');
+    $this->derivatives[$entity_type_id]['title'] = t('Calendar events');
     $this->derivatives[$entity_type_id]['description'] = t('Index of events objects.');
-    $this->derivatives[$entity_type_id]['category'] = t('Events');
+    $this->derivatives[$entity_type_id]['category'] = t('Calendar events');
     $this->derivatives[$entity_type_id]['path'] = "$entity_type_id";
 
     return $this->derivatives;

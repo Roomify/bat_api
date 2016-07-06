@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Database\Database;
 
 use Roomify\Bat\Calendar\Calendar;
 use Roomify\Bat\Store\DrupalDBStore;
@@ -84,49 +85,23 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
    * {@inheritdoc}
    */
   public function processRequest(Request $request, RouteMatchInterface $route_match, SerializerInterface $serializer) {
-    $unit_types = $request->query->get('unit_types');
+    $target_ids = $request->query->get('target_ids');
+    $target_types = $request->query->get('target_types');
+    $target_entity_type = $request->query->get('target_entity_type');
+    $start_date = $request->query->get('start_date');
+    $end_date = $request->query->get('end_date');
     $event_types = $request->query->get('event_types');
-    $background = $request->query->get('background');
-    $unit_ids = $request->query->get('unit_ids');
 
-    $start_date = $request->query->get('start');
-    $end_date = $request->query->get('end');
+    $target_types = array_filter(explode(',', $target_types));
 
-    if ($unit_types == 'all') {
-      $unit_types = array();
-      foreach (bat_unit_get_types() as $type => $info) {
-        $unit_types[] = $type;
-      }
-    }
-    else {
-      $unit_types = array_filter(explode(',', $unit_types));
-    }
-
-    if ($event_types == 'all') {
-      $types = array();
-      foreach (bat_event_get_types() as $type => $info) {
-        $types[] = $type;
-      }
-    }
-    else {
-      $types = array_filter(explode(',', $event_types));
-    }
+    $types = array_filter(explode(',', $event_types));
 
     $events_json = array();
 
     foreach ($types as $type) {
-      // Check if user has permission to view calendar data for this event type.
-      if (!\Drupal::currentUser()->hasPermission('view calendar data for any ' . $type . ' event')) {
-        continue;
-      }
+      $database = Database::getConnectionInfo('default');
+      $prefix = (isset($database['default']['prefix']['default'])) ? $database['default']['prefix']['default'] : '';
 
-      // Get the event type definition from Drupal
-      $bat_event_type = bat_event_type_load($type);
-
-      $target_entity_type = $bat_event_type->target_entity_type;
-
-      // For each type of event create a state store and an event store
-      $prefix = (isset($databases['default']['default']['prefix'])) ? $databases['default']['default']['prefix'] : '';
       $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT, $prefix);
 
       $start_date_object = new \DateTime($start_date);
@@ -135,74 +110,50 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
       $today = new \DateTime();
       if (!\Drupal::currentUser()->hasPermission('view past event information') && $today > $start_date_object) {
         if ($today > $end_date_object) {
-          $return->events = array();
-          return $return;
+          return array();
         }
+
         $start_date_object = $today;
       }
 
-      $ids = array_filter(explode(',', $unit_ids));
+      $ids = explode(',', $target_ids);
 
-      foreach ($unit_types as $unit_type) {
-        $entities = $this->getReferencedIds($unit_type, $ids);
+      $units = array();
+      foreach ($ids as $id) {
+        if ($target_entity = entity_load($target_entity_type, $id)) {
+          if (in_array($target_entity->type, $target_types) || empty($target_types)) {
+            // Setting the default value to 0 since we are dealing with the events array
+            // so getting event IDs.
+            $units[] = new Unit($id, 0);
+          }
+        }
+      }
 
-        $childrens = array();
+      if (!empty($units)) {
+        $event_calendar = new Calendar($units, $event_store);
+        $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
-        // Create an array of unit objects - the default value is set to 0 since we want
-        // to know if the value in the database is actually 0. This will allow us to identify
-        // which events are represented by events in the database (i.e. have a value different to 0)
-        $units = array();
-        foreach ($entities as $entity) {
-          $units[] = new Unit($entity['id'], 0);
+        $bat_event_type = bat_event_type_load($type);
+        if ($bat_event_type->getFixedEventStates()) {
+          $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type);
+        }
+        else {
+          $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type);
         }
 
-        if (!empty($units)) {
-          $event_calendar = new Calendar($units, $event_store);
-
-          $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
-
-          if ($bat_event_type->getFixedEventStates()) {
-            $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type, $background);
-          }
-          else {
-            $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type, $background);
-          }
-
-          foreach ($event_ids as $unit_id => $unit_events) {
-            foreach ($unit_events as $key => $event) {
-              $events_json[] = array(
-                'id' => (string)$key . $unit_id,
-                'bat_id' => $event->getValue(),
-                'resourceId' => 'S' . $unit_id,
-              ) + $event->toJson($event_formatter);
-            }
+        foreach ($event_ids as $unit_id => $unit_events) {
+          foreach ($unit_events as $key => $event) {
+            $events_json[] = array(
+              'id' => (string)$key . $unit_id,
+              'bat_id' => $event->getValue(),
+              'resourceId' => 'S' . $unit_id,
+            ) + $event->toJson($event_formatter);
           }
         }
       }
     }
 
     return $events_json;
-  }
-
-  public function getReferencedIds($unit_type, $ids = array()) {
-    $query = db_select('unit', 'n')
-            ->fields('n', array('id', 'unit_type_id', 'type', 'name'));
-    if (!empty($ids)) {
-      $query->condition('id', $ids, 'IN');
-    }
-    $query->condition('unit_type_id', $unit_type);
-    $bat_units = $query->execute()->fetchAll();
-
-    $units = array();
-    foreach ($bat_units as $unit) {
-      $units[] = array(
-        'id' => $unit->id,
-        'name' => $unit->name,
-        'type_id' => $unit_type,
-      );
-    }
-
-    return $units;
   }
 
 }

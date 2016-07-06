@@ -6,7 +6,8 @@ _core:
 id: bat_api
 label: 'Bat api'
 service_providers:
-  'events_index:calendar-events': 'events_index:calendar-events'
+  'calendar_events_index:calendar-events': 'calendar_events_index:calendar-events'
+  'events_index:events': 'events_index:events'
   'unit_index:calendar-units': 'unit_index:calendar-units'
   'entity_delete:bat_type_group': 'entity_delete:bat_type_group'
   'entity_delete:bat_type_group_bundle': 'entity_delete:bat_type_group_bundle'
