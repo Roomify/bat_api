@@ -614,6 +614,8 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_ty
     }
   }
 
+  drupal_alter('bat_api_units_index_calendar', $units);
+
   return $units;
 }
 
