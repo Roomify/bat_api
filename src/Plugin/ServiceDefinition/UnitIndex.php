@@ -15,7 +15,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Access\AccessResult;
-use Drupal\bat_unit\Entity\TypeBundle;
 
 /**
  * @ServiceDefinition(

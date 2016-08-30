@@ -144,7 +144,7 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
         foreach ($event_ids as $unit_id => $unit_events) {
           foreach ($unit_events as $key => $event) {
             $events_json[] = array(
-              'id' => (string)$key . $unit_id,
+              'id' => (string) $key . $unit_id,
               'bat_id' => $event->getValue(),
               'resourceId' => 'S' . $unit_id,
             ) + $event->toJson($event_formatter);
