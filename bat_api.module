@@ -931,6 +931,17 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
 
   $events_json = _bat_api_merge_non_blocking_events($events_json);
 
+  $context = array(
+    'unit_ids' => $unit_ids,
+    'unit_types' => $unit_types,
+    'start_date' => $start_date_object,
+    'end_date' => $end_date_object,
+    'event_types' => $event_types,
+    'background' => $background,
+  );
+
+  drupal_alter('bat_api_events_index_calendar', $events_json, $context);
+
   return array_values($events_json);
 }
 
