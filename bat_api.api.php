@@ -7,10 +7,21 @@
  * Drupal manner.
  */
 
+/**
+ * Alter units index calendar.
+ *
+ * @param $units
+ */
 function hook_bat_api_units_index_calendar_alter(&$units) {
   // No example.
 }
 
+/**
+ * Alter events index calendar.
+ *
+ * @param $events
+ * @param $context
+ */
 function hook_bat_api_events_index_calendar_alter(&$events, $context) {
   // No example.
 }
