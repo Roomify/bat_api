@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @file
+ */
 
 $plugin = array(
   'label' => t('Commerce Price'),
@@ -8,11 +11,21 @@ $plugin = array(
   ),
 );
 
+/**
+ *
+ */
 class BatUnitFieldHandlerCommercePrice extends BatUnitFieldHandlerBase {
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldType() {
     return 'commerce_price';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldInfo() {
     $price_fields = array();
 
@@ -34,4 +47,5 @@ class BatUnitFieldHandlerCommercePrice extends BatUnitFieldHandlerBase {
 
     return $price_fields;
   }
+
 }

@@ -1,7 +1,8 @@
 <?php
 
 /**
- * API access to booking data for BAT
+ * @file
+ * API access to booking data for BAT.
  */
 
 use Roomify\Bat\Event\Event;
@@ -48,27 +49,27 @@ function bat_api_ctools_plugin_type() {
 }
 
 /**
- * Implements hook_permission()
+ * Implements hook_permission().
  */
 function bat_api_permission() {
   return array(
-    'access types index service' =>  array(
+    'access types index service' => array(
       'title' => t('Access types index service'),
       'description' => t('Access types index service.'),
     ),
-    'access edit type service' =>  array(
+    'access edit type service' => array(
       'title' => t('Access edit type service'),
       'description' => t('Access edit type service.'),
     ),
-    'access add type service' =>  array(
+    'access add type service' => array(
       'title' => t('Access add type service'),
       'description' => t('Access add type service.'),
     ),
-    'access units index service' =>  array(
+    'access units index service' => array(
       'title' => t('Access units index service'),
       'description' => t('Access units index service.'),
     ),
-    'access edit unit service' =>  array(
+    'access edit unit service' => array(
       'title' => t('Access edit unit service'),
       'description' => t('Access edit unit service.'),
     ),
@@ -76,23 +77,23 @@ function bat_api_permission() {
       'title' => t('Access add unit service'),
       'description' => t('Access add unit service.'),
     ),
-    'access units calendar index service' =>  array(
+    'access units calendar index service' => array(
       'title' => t('Access units calendar index service'),
       'description' => t('Access units calendar index service.'),
     ),
-    'access matching units calendar index service' =>  array(
+    'access matching units calendar index service' => array(
       'title' => t('Access matching units calendar index service'),
       'description' => t('Access matching units calendar index service.'),
     ),
-    'access events index service' =>  array(
+    'access events index service' => array(
       'title' => t('Access events index service'),
       'description' => t('Access events index service.'),
     ),
-    'access events calendar index service' =>  array(
+    'access events calendar index service' => array(
       'title' => t('Access events calendar index service'),
       'description' => t('Access events calendar index service.'),
     ),
-    'access edit event service' =>  array(
+    'access edit event service' => array(
       'title' => t('Access edit event service'),
       'description' => t('Access edit event service.'),
     ),
@@ -542,11 +543,12 @@ function bat_api_services_resources() {
 /**
  * Retrieve a list of units to use with Fullcalendar scheduler.
  *
- * @param $unit_types
- * @param $unit_ids
- * @param $event_type
- * @param $offset
- * @param $limit
+ * @param string $unit_types
+ * @param string $unit_ids
+ * @param string $event_type
+ * @param bool $return_children
+ * @param string $offset
+ * @param string $limit
  */
 function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_type, $return_children, $offset, $limit) {
   $create_event_access = FALSE;
@@ -622,9 +624,9 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_ty
 /**
  * Retrieve a list of units.
  *
- * @param $unit_ids
- * @param $offset
- * @param $limit
+ * @param string $unit_ids
+ * @param string $offset
+ * @param string $limit
  */
 function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $return = new stdClass();
@@ -636,7 +638,15 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
   $ids = array_filter(explode(',', $unit_ids));
 
   $query = db_select('bat_units', 'n')
-            ->fields('n', array('unit_id', 'type', 'type_id', 'name', 'language', 'status', 'uid'));
+    ->fields('n', array(
+      'unit_id',
+      'type',
+      'type_id',
+      'name',
+      'language',
+      'status',
+      'uid',
+    ));
   if (!empty($ids)) {
     $query->condition('unit_id', $ids, 'IN');
   }
@@ -655,8 +665,7 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
         'status' => $unit->status,
         'uid' => $unit->uid,
       ),
-      'fields' => array(
-      ),
+      'fields' => array(),
     );
 
     foreach ($field_handlers as $handler) {
@@ -680,11 +689,11 @@ function bat_api_services_units_index($unit_ids, $offset, $limit) {
 /**
  * Create a new unit.
  *
- * @param $name
- * @param $type
- * @param $type_id
- * @param $uid
- * @param $status
+ * @param string $name
+ * @param string $type
+ * @param int $type_id
+ * @param int $uid
+ * @param int $status
  */
 function bat_api_services_add_unit($name, $type, $type_id, $uid, $status) {
   $return = new stdClass();
@@ -718,8 +727,8 @@ function bat_api_services_add_unit($name, $type, $type_id, $uid, $status) {
 /**
  * Update an existing unit.
  *
- * @param $unit_id
- * @param $bat_unit_data
+ * @param int $unit_id
+ * @param array $bat_unit_data
  */
 function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
   $return = new stdClass();
@@ -747,12 +756,12 @@ function bat_api_services_edit_unit($unit_id, $bat_unit_data) {
 /**
  * Retrieve a list of events.
  *
- * @param $target_ids
- * @param $target_types
- * @param $target_entity_type
- * @param $start_date
- * @param $end_date
- * @param $event_types
+ * @param string $target_ids
+ * @param string $target_types
+ * @param string $target_entity_type
+ * @param string $start_date
+ * @param string $end_date
+ * @param string $event_types
  */
 function bat_api_services_events_index($target_ids, $target_types, $target_entity_type, $start_date, $end_date, $event_types) {
   global $databases;
@@ -811,7 +820,7 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
       foreach ($event_ids as $unit_id => $unit_events) {
         foreach ($unit_events as $key => $event) {
           $events_json[] = array(
-            'id' => (string)$key . $unit_id,
+            'id' => (string) $key . $unit_id,
             'bat_id' => $event->getValue(),
             'resourceId' => 'S' . $unit_id,
           ) + $event->toJson($event_formatter);
@@ -828,15 +837,16 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
 /**
  * Retrieve a list of events to use with Fullcalendar scheduler.
  *
- * @param $unit_ids
- * @param $unit_types
- * @param $start_date
- * @param $end_date
- * @param $event_types
+ * @param string $unit_ids
+ * @param string $unit_types
+ * @param string $start_date
+ * @param string $end_date
+ * @param string $event_types
+ * @param bool $background
  */
 function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_date, $end_date, $event_types, $background) {
   global $databases;
-  
+
   if ($unit_types == 'all') {
     $unit_types = array();
     foreach (bat_unit_get_types() as $type => $info) {
@@ -872,7 +882,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
 
     $controller = entity_get_controller($target_entity_type);
 
-    // For each type of event create a state store and an event store
+    // For each type of event create a state store and an event store.
     $prefix = (isset($databases['default']['default']['prefix'])) ? $databases['default']['default']['prefix'] : '';
     $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT, $prefix);
 
@@ -919,7 +929,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
         foreach ($event_ids as $unit_id => $unit_events) {
           foreach ($unit_events as $key => $event) {
             $events_json[] = array(
-              'id' => (string)$key . $unit_id,
+              'id' => (string) $key . $unit_id,
               'bat_id' => $event->getValue(),
               'resourceId' => 'S' . $unit_id,
             ) + $event->toJson($event_formatter);
@@ -948,8 +958,8 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
 /**
  * Update an existing event.
  *
- * @param $event_id
- * @param $bat_event_data
+ * @param int $event_id
+ * @param array $bat_event_data
  */
 function bat_api_services_edit_event($event_id, $bat_event_data) {
   $return = new stdClass();
@@ -1040,7 +1050,7 @@ function bat_api_services_edit_event($event_id, $bat_event_data) {
 /**
  * Merge non blocking events so that we display them as a continuous single event.
  *
- * @param $events array
+ * @param array $events
  *
  * @return array
  */
@@ -1071,11 +1081,11 @@ function _bat_api_merge_non_blocking_events($events) {
 /**
  * Retrieve a list of events to use with Fullcalendar scheduler.
  *
- * @param $unit_types
- * @param $start_date
- * @param $end_date
- * @param $event_types
- * @param $event_states
+ * @param string $unit_types
+ * @param string $start_date
+ * @param string $end_date
+ * @param string $event_types
+ * @param string $event_states
  */
 function bat_api_services_matching_units_calendar($unit_types, $start_date, $end_date, $event_type, $event_states) {
   if ($unit_types == 'all') {
@@ -1099,7 +1109,7 @@ function bat_api_services_matching_units_calendar($unit_types, $start_date, $end
 
   $controller = entity_get_controller($target_entity_type);
 
-  // For each type of event create a state store and an event store
+  // For each type of event create a state store and an event store.
   $state_store = new DrupalDBStore($event_type, DrupalDBStore::BAT_STATE);
 
   $start_date_object = new DateTime($start_date);
@@ -1179,9 +1189,9 @@ function bat_api_services_matching_units_calendar($unit_types, $start_date, $end
 /**
  * Retrieve a list of types.
  *
- * @param $type_ids
- * @param $offset
- * @param $limit
+ * @param string $type_ids
+ * @param string $offset
+ * @param string $limit
  */
 function bat_api_services_types_index($type_ids, $offset, $limit) {
   $return = new stdClass();
@@ -1211,8 +1221,7 @@ function bat_api_services_types_index($type_ids, $offset, $limit) {
         'status' => $type->status,
         'uid' => $type->uid,
       ),
-      'fields' => array(
-      ),
+      'fields' => array(),
     );
 
     foreach ($field_handlers as $handler) {
@@ -1236,8 +1245,8 @@ function bat_api_services_types_index($type_ids, $offset, $limit) {
 /**
  * Update an existing type.
  *
- * @param $type_id
- * @param $bat_type_data
+ * @param int $type_id
+ * @param array $bat_type_data
  */
 function bat_api_services_edit_type($type_id, $bat_type_data) {
   $return = new stdClass();
@@ -1265,10 +1274,10 @@ function bat_api_services_edit_type($type_id, $bat_type_data) {
 /**
  * Create a new type.
  *
- * @param $name
- * @param $type
- * @param $uid
- * @param $status
+ * @param string $name
+ * @param string $type
+ * @param int $uid
+ * @param int $status
  */
 function bat_api_services_add_type($name, $type, $uid, $status) {
   $return = new stdClass();
