@@ -10,7 +10,7 @@
 /**
  * Alter units index calendar.
  *
- * @param $units
+ * @param array $units
  */
 function hook_bat_api_units_index_calendar_alter(&$units) {
   // No example.
@@ -19,8 +19,8 @@ function hook_bat_api_units_index_calendar_alter(&$units) {
 /**
  * Alter events index calendar.
  *
- * @param $events
- * @param $context
+ * @param array $events
+ * @param array $context
  */
 function hook_bat_api_events_index_calendar_alter(&$events, $context) {
   // No example.

@@ -27,7 +27,7 @@ interface BatUnitFieldHandlerInterface {
 abstract class BatUnitFieldHandlerBase implements BatUnitFieldHandlerInterface {
 
   /**
-   *
+   * @var BatUnit
    */
   protected $unit;
 

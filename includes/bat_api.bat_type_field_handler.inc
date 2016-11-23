@@ -27,7 +27,7 @@ interface BatTypeFieldHandlerInterface {
 abstract class BatTypeFieldHandlerBase implements BatTypeFieldHandlerInterface {
 
   /**
-   *
+   * @var BatType
    */
   protected $type;
 

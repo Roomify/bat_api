@@ -73,7 +73,7 @@ function bat_api_permission() {
       'title' => t('Access edit unit service'),
       'description' => t('Access edit unit service.'),
     ),
-    'access add unit service' =>  array(
+    'access add unit service' => array(
       'title' => t('Access add unit service'),
       'description' => t('Access add unit service.'),
     ),
@@ -875,7 +875,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
       continue;
     }
 
-    // Get the event type definition from Drupal
+    // Get the event type definition from Drupal.
     $bat_event_type = bat_event_type_load($type);
 
     $target_entity_type = $bat_event_type->target_entity_type;
@@ -1084,7 +1084,7 @@ function _bat_api_merge_non_blocking_events($events) {
  * @param string $unit_types
  * @param string $start_date
  * @param string $end_date
- * @param string $event_types
+ * @param string $event_type
  * @param string $event_states
  */
 function bat_api_services_matching_units_calendar($unit_types, $start_date, $end_date, $event_type, $event_states) {
@@ -1102,7 +1102,7 @@ function bat_api_services_matching_units_calendar($unit_types, $start_date, $end
 
   $events_json = array();
 
-  // Get the event type definition from Drupal
+  // Get the event type definition from Drupal.
   $bat_event_type = bat_event_type_load($event_type);
 
   $target_entity_type = $bat_event_type->target_entity_type;
@@ -1203,7 +1203,7 @@ function bat_api_services_types_index($type_ids, $offset, $limit) {
   $ids = array_filter(explode(',', $type_ids));
 
   $query = db_select('bat_types', 'n')
-            ->fields('n', array('type_id', 'type', 'name', 'language', 'status', 'uid'));
+    ->fields('n', array('type_id', 'type', 'name', 'language', 'status', 'uid'));
   if (!empty($ids)) {
     $query->condition('type_id', $ids, 'IN');
   }
