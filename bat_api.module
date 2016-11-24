@@ -1183,6 +1183,16 @@ function bat_api_services_matching_units_calendar($unit_types, $start_date, $end
 
   $events_json = _bat_api_merge_non_blocking_events($events_json);
 
+  $context = array(
+    'unit_types' => $unit_types,
+    'start_date' => $start_date_object,
+    'end_date' => $end_date_object,
+    'event_type' => $event_type,
+    'event_states' => $event_states,
+  );
+
+  drupal_alter('bat_api_matching_units_calendar', $events_json, $context);
+
   return array_values($events_json);
 }
 

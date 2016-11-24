@@ -25,3 +25,13 @@ function hook_bat_api_units_index_calendar_alter(&$units) {
 function hook_bat_api_events_index_calendar_alter(&$events, $context) {
   // No example.
 }
+
+/**
+ * Alter matching units calendar.
+ *
+ * @param array $events
+ * @param array $context
+ */
+function hook_bat_api_matching_units_calendar_alter(&$events, $context) {
+  // No example.
+}
