@@ -340,6 +340,20 @@ function bat_api_services_resources() {
             'default value' => TRUE,
           ),
           array(
+            'name'         => 'grouping_ids',
+            'type'         => 'string',
+            'description'  => t('Grouping ids'),
+            'source'       => array('param' => 'grouping_ids'),
+            'optional'     => TRUE,
+          ),
+          array(
+            'name'         => 'grouping_entity_type',
+            'type'         => 'string',
+            'description'  => t('Grouping entity type'),
+            'source'       => array('param' => 'grouping_entity_type'),
+            'optional'     => TRUE,
+          ),
+          array(
             'name'         => 'offset',
             'type'         => 'string',
             'optional'     => TRUE,
@@ -547,14 +561,28 @@ function bat_api_services_resources() {
  * @param string $unit_ids
  * @param string $event_type
  * @param bool $return_children
+ * @param string $grouping_ids
+ * @param string $grouping_entity_type
  * @param string $offset
  * @param string $limit
  */
-function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_type, $return_children, $offset, $limit) {
+function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_type, $return_children, $grouping_ids, $grouping_entity_type, $offset, $limit) {
   $create_event_access = FALSE;
 
   if (bat_event_access('create', bat_event_create(array('type' => $event_type)))) {
     $create_event_access = TRUE;
+  }
+
+  $units_groups = array();
+
+  if ($grouping_ids) {
+    $groups = array_filter(explode(';', $grouping_ids));
+    foreach ($groups as $group) {
+      list($group_entity_id, $group_types) = explode(':', $group);
+      foreach (explode(',', $group_types) as $type_id) {
+        $units_groups[$type_id] = $group_entity_id;
+      }
+    }
   }
 
   $ids = array_filter(explode(',', $unit_ids));
@@ -600,25 +628,75 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_ty
     foreach ($childrens as $type_id => $children) {
       $unit_type = bat_type_load($type_id);
 
-      if ($return_children) {
-        $units[] = array(
-          'id' => $unit_type->type_id,
-          'title' => $unit_type->name,
-          'children' => $children,
-        );
+      if (isset($units_groups[$type_id])) {
+        $entity_id = $units_groups[$type_id];
+
+        if (isset($units['P' . $entity_id])) {
+          if ($return_children) {
+            $units['P' . $entity_id]['children'][] = array(
+              'id' => $unit_type->type_id,
+              'title' => $unit_type->name,
+              'children' => $children,
+            );
+          }
+          else {
+            $units['P' . $entity_id]['children'][] = array(
+              'id' => $unit_type->type_id,
+              'title' => $unit_type->name,
+            );
+          }
+        }
+        else {
+          $grouping_entity = entity_load_single($grouping_entity_type, $entity_id);
+
+          if ($return_children) {
+            $units['P' . $entity_id] = array(
+              'id' => 'P' . $entity_id,
+              'title' => $grouping_entity->name,
+              'children' => array(
+                array(
+                  'id' => $unit_type->type_id,
+                  'title' => $unit_type->name,
+                  'children' => $children,
+                ),
+              ),
+            );
+          }
+          else {
+            $units['P' . $entity_id] = array(
+              'id' => 'P' . $entity_id,
+              'title' => $grouping_entity->name,
+              'children' => array(
+                array(
+                  'id' => $unit_type->type_id,
+                  'title' => $unit_type->name,
+                ),
+              ),
+            );
+          }
+        }
       }
       else {
-        $units[] = array(
-          'id' => $unit_type->type_id,
-          'title' => $unit_type->name,
-        );
+        if ($return_children) {
+          $units[$unit_type->type_id] = array(
+            'id' => $unit_type->type_id,
+            'title' => $unit_type->name,
+            'children' => $children,
+          );
+        }
+        else {
+          $units[$unit_type->type_id] = array(
+            'id' => $unit_type->type_id,
+            'title' => $unit_type->name,
+          );
+        }
       }
     }
   }
 
   drupal_alter('bat_api_units_index_calendar', $units);
 
-  return $units;
+  return array_values($units);
 }
 
 /**
