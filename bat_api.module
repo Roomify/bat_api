@@ -611,6 +611,7 @@ function bat_api_services_units_index_calendar($unit_types, $unit_ids, $event_ty
   }
   else {
     $types = array_filter(explode(',', $unit_types));
+    $types = array_unique($types);
   }
 
   $bat_event_type = bat_event_type_load($event_type);
