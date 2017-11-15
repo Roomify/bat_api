@@ -1,0 +1,5 @@
+services:
+  http_middleware.bat_api:
+    class: Drupal\bat_api\StackMiddleware\BatApiMiddleware
+    tags:
+      - { name: http_middleware, priority: 1, responder: true }
