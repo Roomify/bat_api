@@ -94,7 +94,7 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
     $end_date = $request->query->get('end');
 
     if ($unit_types == 'all') {
-      $unit_types = array();
+      $unit_types = [];
       foreach (bat_unit_get_types() as $type => $info) {
         $unit_types[] = $type;
       }
@@ -104,7 +104,7 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
     }
 
     if ($event_types == 'all') {
-      $types = array();
+      $types = [];
       foreach (bat_event_get_types() as $type => $info) {
         $types[] = $type;
       }
@@ -113,7 +113,7 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       $types = array_filter(explode(',', $event_types));
     }
 
-    $events_json = array();
+    $events_json = [];
 
     foreach ($types as $type) {
       // Check if user has permission to view calendar data for this event type.
@@ -138,7 +138,7 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       $today = new \DateTime();
       if (!\Drupal::currentUser()->hasPermission('view past event information') && $today > $start_date_object) {
         if ($today > $end_date_object) {
-          $return->events = array();
+          $return->events = [];
           return $return;
         }
         $start_date_object = $today;
@@ -149,12 +149,12 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       foreach ($unit_types as $unit_type) {
         $entities = $this->getReferencedIds($unit_type, $ids);
 
-        $childrens = array();
+        $childrens = [];
 
         // Create an array of unit objects - the default value is set to 0 since we want
         // to know if the value in the database is actually 0. This will allow us to identify
         // which events are represented by events in the database (i.e. have a value different to 0)
-        $units = array();
+        $units = [];
         foreach ($entities as $entity) {
           $units[] = new Unit($entity['id'], 0);
         }
@@ -173,11 +173,11 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
 
           foreach ($event_ids as $unit_id => $unit_events) {
             foreach ($unit_events as $key => $event) {
-              $events_json[] = array(
+              $events_json[] = [
                 'id' => (string) $key . $unit_id,
                 'bat_id' => $event->getValue(),
                 'resourceId' => 'S' . $unit_id,
-              ) + $event->toJson($event_formatter);
+              ] + $event->toJson($event_formatter);
             }
           }
         }
@@ -187,22 +187,22 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
     return $events_json;
   }
 
-  public function getReferencedIds($unit_type, $ids = array()) {
+  public function getReferencedIds($unit_type, $ids = []) {
     $query = db_select('unit', 'n')
-            ->fields('n', array('id', 'unit_type_id', 'type', 'name'));
+            ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');
     }
     $query->condition('unit_type_id', $unit_type);
     $bat_units = $query->execute()->fetchAll();
 
-    $units = array();
+    $units = [];
     foreach ($bat_units as $unit) {
-      $units[] = array(
+      $units[] = [
         'id' => $unit->id,
         'name' => $unit->name,
         'type_id' => $unit_type,
-      );
+      ];
     }
 
     return $units;

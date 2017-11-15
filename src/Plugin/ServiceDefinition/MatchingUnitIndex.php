@@ -89,7 +89,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
     $event_states = $request->query->get('event_states');
 
     if ($unit_types == 'all') {
-      $unit_types = array();
+      $unit_types = [];
       foreach (bat_unit_get_types() as $type => $info) {
         $unit_types[] = $type;
       }
@@ -100,7 +100,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
 
     $states = array_filter(explode(',', $event_states));
 
-    $events_json = array();
+    $events_json = [];
 
     // Get the event type definition from Drupal
     $bat_event_type = bat_event_type_load($event_type);
@@ -116,7 +116,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
     $today = new \DateTime();
     if (!\Drupal::currentUser()->hasPermission('view past event information') && $today > $start_date_object) {
       if ($today > $end_date_object) {
-        $return->events = array();
+        $return->events = [];
         return $return;
       }
       $start_date_object = $today;
@@ -125,18 +125,18 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
     foreach ($unit_types as $unit_type) {
       $entities = $this->getReferencedIds($unit_type);
 
-      $childrens = array();
+      $childrens = [];
 
-      $units = array();
+      $units = [];
       foreach ($entities as $entity) {
         $target_entity = entity_load($target_entity_type, $entity['id']);
         $units[] = new Unit($entity['id'], $target_entity->getEventDefaultValue($event_type));
       }
 
       if (!empty($units)) {
-        $dates = array(
+        $dates = [
           $end_date_object->getTimestamp() => $end_date_object,
-        );
+        ];
 
         $calendar = new Calendar($units, $state_store);
 
@@ -157,7 +157,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
           $ed = clone($dates[$i + 1]);
           $ed->sub(new \DateInterval('PT1M'));
 
-          $response = $calendar->getMatchingUnits($sd, $ed, $states, array(), FALSE, FALSE);
+          $response = $calendar->getMatchingUnits($sd, $ed, $states, [], FALSE, FALSE);
 
           if (count(array_keys($response->getIncluded()))) {
             $color = 'green';
@@ -165,7 +165,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
           else {
             $color = 'red';
           }
-          $events_json[] = array(
+          $events_json[] = [
             'id' => $unit_type,
             'resourceId' => $unit_type,
             'start' => $sd->format('Y-m-d') . 'T' . $sd->format('H:i:00'),
@@ -174,7 +174,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
             'rendering' => 'background',
             'blocking' => 0,
             'title' => '',
-          );
+          ];
         }
       }
     }
@@ -184,22 +184,22 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
     return array_values($events_json);
   }
 
-  public function getReferencedIds($unit_type, $ids = array()) {
+  public function getReferencedIds($unit_type, $ids = []) {
     $query = db_select('unit', 'n')
-            ->fields('n', array('id', 'unit_type_id', 'type', 'name'));
+            ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');
     }
     $query->condition('unit_type_id', $unit_type);
     $bat_units = $query->execute()->fetchAll();
 
-    $units = array();
+    $units = [];
     foreach ($bat_units as $unit) {
-      $units[] = array(
+      $units[] = [
         'id' => $unit->id,
         'name' => $unit->name,
         'type_id' => $unit_type,
-      );
+      ];
     }
 
     return $units;

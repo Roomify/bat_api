@@ -9,17 +9,17 @@ function hook_install() {
 
   $resources = $rest->get('resources');
 
-  $resources['entity:bat_event'] = array(
-    'PATCH' => array(
-      'supported_formats' => array(
+  $resources['entity:bat_event'] = [
+    'PATCH' => [
+      'supported_formats' => [
         'hal_json',
         'json',
-      ),
-      'supported_auth' => array(
+      ],
+      'supported_auth' => [
         'cookie',
-      ),
-    ),
-  );
+      ],
+    ],
+  ];
 
   $rest->set('resources', $resources)->save(TRUE);
 }

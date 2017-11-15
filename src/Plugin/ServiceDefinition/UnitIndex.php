@@ -86,14 +86,14 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
     $return_children = TRUE;
 
     $create_event_access = FALSE;
-    if (bat_event_access(bat_event_create(array('type' => $event_type)), 'create', \Drupal::currentUser()) == AccessResult::allowed()) {
+    if (bat_event_access(bat_event_create(['type' => $event_type]), 'create', \Drupal::currentUser()) == AccessResult::allowed()) {
       $create_event_access = TRUE;
     }
 
     $ids = array_filter(explode(',', $unit_ids));
 
     if ($unit_types == 'all') {
-      $types = array();
+      $types = [];
 
       foreach (bat_unit_get_types() as $type) {
         $type_bundle = bat_type_bundle_load($type->bundle());
@@ -112,36 +112,36 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
 
     $target_entity_type = $bat_event_type->target_entity_type;
 
-    $units = array();
+    $units = [];
 
     foreach ($types as $type) {
       $entities = $this->getReferencedIds($type, $ids);
 
-      $childrens = array();
+      $childrens = [];
 
       foreach ($entities as $entity) {
-        $childrens[$entity['type_id']][] = array(
+        $childrens[$entity['type_id']][] = [
           'id' => 'S' . $entity['id'],
           'title' => $entity['name'],
           'create_event' => $create_event_access,
-        );
+        ];
       }
 
       foreach ($childrens as $type_id => $children) {
         $unit_type = bat_type_load($type_id);
 
         if ($return_children) {
-          $units[] = array(
+          $units[] = [
             'id' => $unit_type->id(),
             'title' => $unit_type->label(),
             'children' => $children,
-          );
+          ];
         }
         else {
-          $units[] = array(
+          $units[] = [
             'id' => $unit_type->id(),
             'title' => $unit_type->label(),
-          );
+          ];
         }
       }
     }
@@ -149,22 +149,22 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
     return $units;
   }
 
-  public function getReferencedIds($unit_type, $ids = array()) {
+  public function getReferencedIds($unit_type, $ids = []) {
     $query = db_select('unit', 'n')
-            ->fields('n', array('id', 'unit_type_id', 'type', 'name'));
+            ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');
     }
     $query->condition('unit_type_id', $unit_type);
     $bat_units = $query->execute()->fetchAll();
 
-    $units = array();
+    $units = [];
     foreach ($bat_units as $unit) {
-      $units[] = array(
+      $units[] = [
         'id' => $unit->id,
         'name' => $unit->name,
         'type_id' => $unit_type,
-      );
+      ];
     }
 
     return $units;

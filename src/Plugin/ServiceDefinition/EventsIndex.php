@@ -96,7 +96,7 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
 
     $types = array_filter(explode(',', $event_types));
 
-    $events_json = array();
+    $events_json = [];
 
     foreach ($types as $type) {
       $database = Database::getConnectionInfo('default');
@@ -110,7 +110,7 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
       $today = new \DateTime();
       if (!\Drupal::currentUser()->hasPermission('view past event information') && $today > $start_date_object) {
         if ($today > $end_date_object) {
-          return array();
+          return [];
         }
 
         $start_date_object = $today;
@@ -118,7 +118,7 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
 
       $ids = explode(',', $target_ids);
 
-      $units = array();
+      $units = [];
       foreach ($ids as $id) {
         if ($target_entity = entity_load($target_entity_type, $id)) {
           if (in_array($target_entity->type, $target_types) || empty($target_types)) {
@@ -143,11 +143,11 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
 
         foreach ($event_ids as $unit_id => $unit_events) {
           foreach ($unit_events as $key => $event) {
-            $events_json[] = array(
+            $events_json[] = [
               'id' => (string) $key . $unit_id,
               'bat_id' => $event->getValue(),
               'resourceId' => 'S' . $unit_id,
-            ) + $event->toJson($event_formatter);
+            ] + $event->toJson($event_formatter);
           }
         }
       }
