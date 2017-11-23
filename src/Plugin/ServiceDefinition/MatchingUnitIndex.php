@@ -181,6 +181,16 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
 
     $events_json = bat_api_merge_non_blocking_events($events_json);
 
+    $context = array(
+      'unit_types' => $unit_types,
+      'start_date' => $start_date_object,
+      'end_date' => $end_date_object,
+      'event_type' => $event_type,
+      'event_states' => $event_states,
+    );
+
+    \Drupal::moduleHandler()->alter('bat_api_matching_units_calendar', $events_json, $context);
+
     return array_values($events_json);
   }
 

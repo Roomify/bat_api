@@ -184,7 +184,18 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       }
     }
 
-    return $events_json;
+    $context = array(
+      'unit_ids' => $unit_ids,
+      'unit_types' => $unit_types,
+      'start_date' => $start_date_object,
+      'end_date' => $end_date_object,
+      'event_types' => $event_types,
+      'background' => $background,
+    );
+
+    \Drupal::moduleHandler()->alter('bat_api_events_index_calendar', $events_json, $context);
+
+    return array_values($events_json);
   }
 
   public function getReferencedIds($unit_type, $ids = []) {

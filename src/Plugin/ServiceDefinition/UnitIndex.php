@@ -146,6 +146,8 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
       }
     }
 
+    \Drupal::moduleHandler()->alter('bat_api_units_index_calendar', $units);
+
     return $units;
   }
 
