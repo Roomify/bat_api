@@ -929,7 +929,7 @@ function bat_api_services_events_index($target_ids, $target_types, $target_entit
       foreach ($event_ids as $unit_id => $unit_events) {
         foreach ($unit_events as $key => $event) {
           $events_json[] = array(
-            'id' => (string) $key . $unit_id,
+            'id' => 'U' . $unit_id . 'E' . $key,
             'bat_id' => $event->getValue(),
             'resourceId' => 'S' . $unit_id,
           ) + $event->toJson($event_formatter);
@@ -1038,7 +1038,7 @@ function bat_api_services_events_index_calendar($unit_ids, $unit_types, $start_d
         foreach ($event_ids as $unit_id => $unit_events) {
           foreach ($unit_events as $key => $event) {
             $events_json[] = array(
-              'id' => (string) $key . $unit_id,
+              'id' => 'U' . $unit_id . 'E' . $key,
               'bat_id' => $event->getValue(),
               'resourceId' => 'S' . $unit_id,
             ) + $event->toJson($event_formatter);
