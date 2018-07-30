@@ -6,7 +6,7 @@ php = 5.3.9
 package = BAT
 
 dependencies[] = bat_event
-dependencies[] = bat_type
+dependencies[] = bat_unit
 dependencies[] = rest_server
 dependencies[] = services
 
