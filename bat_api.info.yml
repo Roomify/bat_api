@@ -4,6 +4,6 @@ description: Provides API access to BAT Booking and Availability Data for Drupal
 core: 8.x
 package: bat
 dependencies:
-  - bat
+  - bat:bat_event
   - hal
   - services
