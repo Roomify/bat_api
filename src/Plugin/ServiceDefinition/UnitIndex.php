@@ -110,7 +110,7 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
 
     $bat_event_type = bat_event_type_load($event_type);
 
-    $target_entity_type = $bat_event_type->target_entity_type;
+    $target_entity_type = $bat_event_type->getTargetEntityType();
 
     $units = [];
 

@@ -105,7 +105,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
     // Get the event type definition from Drupal
     $bat_event_type = bat_event_type_load($event_type);
 
-    $target_entity_type = $bat_event_type->target_entity_type;
+    $target_entity_type = $bat_event_type->getTargetEntityType();
 
     // For each type of event create a state store and an event store
     $state_store = new DrupalDBStore($event_type, DrupalDBStore::BAT_STATE);
