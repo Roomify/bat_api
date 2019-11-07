@@ -1,25 +1,8 @@
 <?php
 
-
 /**
- * Implements hook_install().
+ * Implements hook_uninstall().
  */
-function hook_install() {
-  $rest = \Drupal::configFactory()->getEditable('rest.settings');
-
-  $resources = $rest->get('resources');
-
-  $resources['entity:bat_event'] = [
-    'PATCH' => [
-      'supported_formats' => [
-        'hal_json',
-        'json',
-      ],
-      'supported_auth' => [
-        'cookie',
-      ],
-    ],
-  ];
-
-  $rest->set('resources', $resources)->save(TRUE);
+function bat_api_uninstall() {
+  Drupal::configFactory()->getEditable('services.service_endpoint.bat_api')->delete();
 }
