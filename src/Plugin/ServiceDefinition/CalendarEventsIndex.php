@@ -124,7 +124,7 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       // Get the event type definition from Drupal
       $bat_event_type = bat_event_type_load($type);
 
-      $target_entity_type = $bat_event_type->target_entity_type;
+      $target_entity_type = $bat_event_type->getTargetEntityType();
 
       // For each type of event create a state store and an event store
       $database = Database::getConnectionInfo('default');
