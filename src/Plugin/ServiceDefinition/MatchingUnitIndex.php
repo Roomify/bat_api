@@ -129,7 +129,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
 
       $units = [];
       foreach ($entities as $entity) {
-        $target_entity = entity_load($target_entity_type, $entity['id']);
+        $target_entity = \Drupal::entityTypeManager()->getStorage($target_entity_type)->load($entity['id']);
         $units[] = new Unit($entity['id'], $target_entity->getEventDefaultValue($event_type));
       }
 
@@ -195,7 +195,7 @@ class MatchingUnitIndex extends ServiceDefinitionBase implements ContainerFactor
   }
 
   public function getReferencedIds($unit_type, $ids = []) {
-    $query = db_select('unit', 'n')
+    $query = \Drupal::database()->select('unit', 'n')
             ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');

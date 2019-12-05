@@ -152,7 +152,7 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
   }
 
   public function getReferencedIds($unit_type, $ids = []) {
-    $query = db_select('unit', 'n')
+    $query = \Drupal::database()->select('unit', 'n')
             ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');

@@ -120,7 +120,7 @@ class EventsIndex extends ServiceDefinitionBase implements ContainerFactoryPlugi
 
       $units = [];
       foreach ($ids as $id) {
-        if ($target_entity = entity_load($target_entity_type, $id)) {
+        if ($target_entity = \Drupal::entityTypeManager()->getStorage($target_entity_type)->load($id)) {
           if (in_array($target_entity->type, $target_types) || empty($target_types)) {
             // Setting the default value to 0 since we are dealing with the events array
             // so getting event IDs.
