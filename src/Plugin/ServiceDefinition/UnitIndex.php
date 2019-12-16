@@ -6,9 +6,12 @@
 
 namespace Drupal\bat_api\Plugin\ServiceDefinition;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\services\ServiceDefinitionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -43,6 +46,54 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
   protected $entityTypeManager;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
+
+  /**
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
+   *   The entity query factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
+   *   The entity manager.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryFactory $query_factory, EntityTypeManagerInterface $entity_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler, Connection $connection) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->queryFactory = $query_factory;
+    $this->entityTypeManager = $entity_manager;
+    $this->currentUser = $current_user;
+    $this->moduleHandler = $module_handler;
+    $this->connection = $connection;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -51,21 +102,11 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
       $plugin_id,
       $plugin_definition,
       $container->get('entity.query'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('current_user'),
+      $container->get('module_handler'),
+      $container->get('database')
     );
-  }
-
-  /**
-   * @param array $configuration
-   * @param string $plugin_id
-   * @param mixed $plugin_definition
-   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryFactory $query_factory, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->queryFactory = $query_factory;
-    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -86,7 +127,7 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
     $return_children = TRUE;
 
     $create_event_access = FALSE;
-    if (bat_event_access(bat_event_create(['type' => $event_type]), 'create', \Drupal::currentUser()) == AccessResult::allowed()) {
+    if (bat_event_access(bat_event_create(['type' => $event_type]), 'create', $this->currentUser) == AccessResult::allowed()) {
       $create_event_access = TRUE;
     }
 
@@ -146,13 +187,13 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
       }
     }
 
-    \Drupal::moduleHandler()->alter('bat_api_units_index_calendar', $units);
+    $this->moduleHandler->alter('bat_api_units_index_calendar', $units);
 
     return $units;
   }
 
   public function getReferencedIds($unit_type, $ids = []) {
-    $query = \Drupal::database()->select('unit', 'n')
+    $query = $this->connection->select('unit', 'n')
             ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');

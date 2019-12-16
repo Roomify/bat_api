@@ -6,9 +6,12 @@
 
 namespace Drupal\bat_api\Plugin\ServiceDefinition;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\services\ServiceDefinitionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -19,8 +22,8 @@ use Drupal\Core\Database\Database;
 use Roomify\Bat\Calendar\Calendar;
 use Roomify\Bat\Store\DrupalDBStore;
 use Roomify\Bat\Unit\Unit;
-use Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter;
 use Drupal\bat_fullcalendar\FullCalendarFixedStateEventFormatter;
+use Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter;
 
 /**
  * @ServiceDefinition(
@@ -49,6 +52,68 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
   protected $entityTypeManager;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
+
+  /**
+   * @var \Drupal\bat_fullcalendar\FullCalendarFixedStateEventFormatter
+   */
+  protected $fixedStateEventFormatter;
+
+  /**
+   * @var \Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter
+   */
+  protected $openStateEventFormatter;
+
+  /**
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
+   *   The entity query factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
+   *   The entity manager.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection.
+   * @param \Drupal\bat_fullcalendar\FullCalendarFixedStateEventFormatter $fixedStateEventFormatter
+   * @param \Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter $openStateEventFormatter
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryFactory $query_factory, EntityTypeManagerInterface $entity_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler, Connection $connection, FullCalendarFixedStateEventFormatter $fixedStateEventFormatter, FullCalendarOpenStateEventFormatter $openStateEventFormatter) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->queryFactory = $query_factory;
+    $this->entityTypeManager = $entity_manager;
+    $this->currentUser = $current_user;
+    $this->moduleHandler = $module_handler;
+    $this->connection = $connection;
+    $this->fixedStateEventFormatter = $fixedStateEventFormatter;
+    $this->openStateEventFormatter = $openStateEventFormatter;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -57,21 +122,13 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       $plugin_id,
       $plugin_definition,
       $container->get('entity.query'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('current_user'),
+      $container->get('module_handler'),
+      $container->get('database'),
+      $container->get('bat_fullcalendar.fixed_state_event_formatter'),
+      $container->get('bat_fullcalendar.open_state_event_formatter')
     );
-  }
-
-  /**
-   * @param array $configuration
-   * @param string $plugin_id
-   * @param mixed $plugin_definition
-   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryFactory $query_factory, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->queryFactory = $query_factory;
-    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -92,6 +149,9 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
 
     $start_date = $request->query->get('start');
     $end_date = $request->query->get('end');
+
+    $start_date_object = new \DateTime($start_date);
+    $end_date_object = new \DateTime($end_date);
 
     if ($unit_types == 'all') {
       $unit_types = [];
@@ -117,7 +177,7 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
 
     foreach ($types as $type) {
       // Check if user has permission to view calendar data for this event type.
-      if (!\Drupal::currentUser()->hasPermission('view calendar data for any ' . $type . ' event')) {
+      if (!$this->currentUser->hasPermission('view calendar data for any ' . $type . ' event')) {
         continue;
       }
 
@@ -132,14 +192,10 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
 
       $event_store = new DrupalDBStore($type, DrupalDBStore::BAT_EVENT, $prefix);
 
-      $start_date_object = new \DateTime($start_date);
-      $end_date_object = new \DateTime($end_date);
-
       $today = new \DateTime();
-      if (!\Drupal::currentUser()->hasPermission('view past event information') && $today > $start_date_object) {
+      if (!$this->currentUser->hasPermission('view past event information') && $today > $start_date_object) {
         if ($today > $end_date_object) {
-          $return->events = [];
-          return $return;
+          return [];
         }
         $start_date_object = $today;
       }
@@ -165,11 +221,14 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
           $event_ids = $event_calendar->getEvents($start_date_object, $end_date_object);
 
           if ($bat_event_type->getFixedEventStates()) {
-            $event_formatter = new FullCalendarFixedStateEventFormatter($bat_event_type, $background);
+            $event_formatter = $this->fixedStateEventFormatter;
           }
           else {
-            $event_formatter = new FullCalendarOpenStateEventFormatter($bat_event_type, $background);
+            $event_formatter = $this->openStateEventFormatter;
           }
+
+          $event_formatter->setEventType($bat_event_type);
+          $event_formatter->setBackground($background);
 
           foreach ($event_ids as $unit_id => $unit_events) {
             foreach ($unit_events as $key => $event) {
@@ -193,13 +252,13 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       'background' => $background,
     );
 
-    \Drupal::moduleHandler()->alter('bat_api_events_index_calendar', $events_json, $context);
+    $this->moduleHandler->alter('bat_api_events_index_calendar', $events_json, $context);
 
     return array_values($events_json);
   }
 
   public function getReferencedIds($unit_type, $ids = []) {
-    $query = \Drupal::database()->select('unit', 'n')
+    $query = $this->connection->select('unit', 'n')
             ->fields('n', ['id', 'unit_type_id', 'type', 'name']);
     if (!empty($ids)) {
       $query->condition('id', $ids, 'IN');
