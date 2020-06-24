@@ -8,7 +8,6 @@ namespace Drupal\bat_api\Plugin\ServiceDefinition;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -30,13 +29,6 @@ use Drupal\Core\Access\AccessResult;
  * )
  */
 class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * The entity query factory.
-   *
-   * @var \Drupal\Core\Entity\Query\QueryFactoryInterface
-   */
-  protected $queryFactory;
 
   /**
    * The entity type manager.
@@ -73,8 +65,6 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
-   *   The entity query factory.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Session\AccountInterface $current_user
@@ -84,9 +74,8 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryFactory $query_factory, EntityTypeManagerInterface $entity_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler, Connection $connection) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler, Connection $connection) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->queryFactory = $query_factory;
     $this->entityTypeManager = $entity_manager;
     $this->currentUser = $current_user;
     $this->moduleHandler = $module_handler;
@@ -101,7 +90,6 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity.query'),
       $container->get('entity_type.manager'),
       $container->get('current_user'),
       $container->get('module_handler'),

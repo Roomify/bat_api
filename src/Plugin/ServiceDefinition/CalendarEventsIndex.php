@@ -8,7 +8,6 @@ namespace Drupal\bat_api\Plugin\ServiceDefinition;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -36,13 +35,6 @@ use Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter;
  * )
  */
 class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * The entity query factory.
-   *
-   * @var \Drupal\Core\Entity\Query\QueryFactoryInterface
-   */
-  protected $queryFactory;
 
   /**
    * The entity type manager.
@@ -89,8 +81,6 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
-   *   The entity query factory.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Session\AccountInterface $current_user
@@ -102,9 +92,8 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
    * @param \Drupal\bat_fullcalendar\FullCalendarFixedStateEventFormatter $fixedStateEventFormatter
    * @param \Drupal\bat_fullcalendar\FullCalendarOpenStateEventFormatter $openStateEventFormatter
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryFactory $query_factory, EntityTypeManagerInterface $entity_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler, Connection $connection, FullCalendarFixedStateEventFormatter $fixedStateEventFormatter, FullCalendarOpenStateEventFormatter $openStateEventFormatter) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_manager, AccountInterface $current_user, ModuleHandlerInterface $module_handler, Connection $connection, FullCalendarFixedStateEventFormatter $fixedStateEventFormatter, FullCalendarOpenStateEventFormatter $openStateEventFormatter) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->queryFactory = $query_factory;
     $this->entityTypeManager = $entity_manager;
     $this->currentUser = $current_user;
     $this->moduleHandler = $module_handler;
@@ -121,7 +110,6 @@ class CalendarEventsIndex extends ServiceDefinitionBase implements ContainerFact
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity.query'),
       $container->get('entity_type.manager'),
       $container->get('current_user'),
       $container->get('module_handler'),
