@@ -18,7 +18,7 @@ class CalendarEventsIndex extends DeriverBase implements ContainerDeriverInterfa
   public static function create(ContainerInterface $container, $base_plugin_id) {
     return new static(
       $container->get('router.route_provider'),
-      $container->get('entity.manager')
+      $container->get('entity_type.manager')
     );
   }
 
