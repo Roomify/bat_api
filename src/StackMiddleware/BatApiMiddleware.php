@@ -24,10 +24,8 @@ class BatApiMiddleware implements HttpKernelInterface {
   /**
    * Constructs a BatApiMiddleware object.
    *
-   * @param \Symfony\Component\HttpKernel\HttpKernelInterface $kernel
+   * @param \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel
    *   The decorated kernel.
-   * @param mixed $optional_argument
-   *   (optional) An optional argument.
    */
   public function __construct(HttpKernelInterface $http_kernel) {
     $this->httpKernel = $http_kernel;

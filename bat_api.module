@@ -3,7 +3,7 @@
 /**
  * Merge non blocking events so that we display them as a continuous single event.
  *
- * @param $events array
+ * @param array $events
  *
  * @return array
  */

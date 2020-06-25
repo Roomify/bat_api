@@ -112,8 +112,6 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
     $unit_types = $request->query->get('types');
     $unit_ids = $request->query->get('ids');
 
-    $return_children = TRUE;
-
     $create_event_access = FALSE;
     if (bat_event_access(bat_event_create(['type' => $event_type]), 'create', $this->currentUser) == AccessResult::allowed()) {
       $create_event_access = TRUE;
@@ -159,19 +157,11 @@ class UnitIndex extends ServiceDefinitionBase implements ContainerFactoryPluginI
       foreach ($childrens as $type_id => $children) {
         $unit_type = bat_type_load($type_id);
 
-        if ($return_children) {
-          $units[] = [
-            'id' => $unit_type->id(),
-            'title' => $unit_type->label(),
-            'children' => $children,
-          ];
-        }
-        else {
-          $units[] = [
-            'id' => $unit_type->id(),
-            'title' => $unit_type->label(),
-          ];
-        }
+        $units[] = [
+          'id' => $unit_type->id(),
+          'title' => $unit_type->label(),
+          'children' => $children,
+        ];
       }
     }
 
